@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  
+  /* Custom colors for Intact Insurance */
+  --intact-teal: #007B87;
+  --intact-dark-teal: #004248;
+  --intact-light-teal: #DCE8E4;
+  --intact-red: #C60C30;
+  --intact-gray: #F0F0F0;
+  --intact-text: #333333;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--intact-text);
+  font-family: 'Gibson', Arial, Helvetica, sans-serif;
+}
+
+/* Custom styles for form elements */
+select option {
+  background-color: white;
+  color: var(--intact-text);
+}
+
+/* Utility classes */
+.text-intact-teal {
+  color: var(--intact-teal);
+}
+
+.bg-intact-teal {
+  background-color: var(--intact-teal);
+}
+
+.text-intact-red {
+  color: var(--intact-red);
+}
+
+.bg-intact-red {
+  background-color: var(--intact-red);
+}
+
+.text-intact-dark-teal {
+  color: var(--intact-dark-teal);
+}
+
+.bg-intact-dark-teal {
+  background-color: var(--intact-dark-teal);
+}
