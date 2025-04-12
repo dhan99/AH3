@@ -1,16 +1,30 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
 import useStore from '@/store/useStore';
-import { ResponsiveImage } from '@/components/ui';
 import Link from 'next/link';
+
+import {
+  Header,
+  MainNavigation,
+  StatusTabs,
+  ActivityCard,
+  TaskList,
+  ActionButton,
+  SearchInput,
+  ActivityFeed
+} from '@/components/dashboard';
 
 export default function BrokerDashboard() {
   const router = useRouter();
   const { isAuthenticated, isLoading, logout, user: authUser } = useMockAuth();
   const { user, setUser, setAuthenticated } = useStore();
+  
+  // Dashboard state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeStatusTab, setActiveStatusTab] = useState('drafted');
   
   // Sync auth user with store
   useEffect(() => {
@@ -31,6 +45,144 @@ export default function BrokerDashboard() {
     logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
+  // Status tab data
+  const statusTabs = [
+    { id: 'drafted', label: 'Drafted', count: 12 },
+    { id: 'quoteCreated', label: 'Quote Created', count: 12 },
+    { id: 'proposalSent', label: 'Proposal Sent', count: 12 },
+    { id: 'quoteExpiring', label: 'Quote Expiring', count: 12 },
+    { id: 'bound', label: 'Bound', count: 12 },
+  ];
+
+  // Mock activity cards data
+  const activityCards = [
+    {
+      companyName: 'Very Good Trucking',
+      status: 'Drafted',
+      dotNumber: '1234567',
+      mcNumber: 'MC987654',
+      units: 5,
+      drivers: 7,
+      city: 'Chicago',
+      state: 'IL',
+      effectiveDate: '05/01/2025',
+      products: {
+        occupationalAccident: true,
+        nonTruckingLiability: true,
+        vehiclePhysicalDamage: false,
+      },
+    },
+    {
+      companyName: 'Great Trucking',
+      status: 'Drafted',
+      dotNumber: '7654321',
+      mcNumber: 'MC123456',
+      units: 12,
+      drivers: 15,
+      city: 'Dallas',
+      state: 'TX',
+      effectiveDate: '06/15/2025',
+      products: {
+        occupationalAccident: true,
+        nonTruckingLiability: false,
+        vehiclePhysicalDamage: true,
+      },
+    },
+    {
+      companyName: 'Excellent Trucking',
+      status: 'Drafted',
+      dotNumber: '9876543',
+      mcNumber: 'MC456789',
+      units: 8,
+      drivers: 10,
+      city: 'Atlanta',
+      state: 'GA',
+      effectiveDate: '07/01/2025',
+      products: {
+        occupationalAccident: true,
+        nonTruckingLiability: true,
+        vehiclePhysicalDamage: true,
+      },
+    },
+    {
+      companyName: 'Superior Trucking',
+      status: 'Drafted',
+      dotNumber: '3456789',
+      mcNumber: 'MC654321',
+      units: 15,
+      drivers: 18,
+      city: 'Denver',
+      state: 'CO',
+      effectiveDate: '05/15/2025',
+      products: {
+        occupationalAccident: false,
+        nonTruckingLiability: true,
+        vehiclePhysicalDamage: true,
+      },
+    },
+  ];
+
+  // Mock tasks data
+  const tasks = [
+    {
+      company: 'Best Trucking, Inc.',
+      taskType: 'Enrollment',
+      description: '0 Enrollees - Plan a follow up',
+      dueDate: '02/25/25',
+    },
+    {
+      company: 'Good Guy Trucking, Inc.',
+      taskType: 'Change Request',
+      description: 'Request to update Questionnaire (and quote)',
+      dueDate: '03/10/25',
+    },
+    {
+      company: 'Best Trucking, Inc.',
+      taskType: 'Enrollment',
+      description: '0 Enrollees - Plan a follow up',
+      dueDate: '02/25/25',
+    },
+    {
+      company: 'Best Trucking, Inc.',
+      taskType: 'Enrollment',
+      description: '0 Enrollees - Plan a follow up',
+      dueDate: '02/25/25',
+    },
+    {
+      company: 'Best Trucking, Inc.',
+      taskType: 'Enrollment',
+      description: '0 Enrollees - Plan a follow up',
+      dueDate: '02/25/25',
+    },
+  ];
+
+  // Mock activity feed data
+  const activities = [
+    {
+      id: '1',
+      content: 'Very Good Trucking accepted a quote proposal.',
+      secondaryContent: 'You\'ve bound another account! 🎉',
+      timestamp: '1 hour ago',
+    },
+    {
+      id: '2',
+      content: 'Moderately Good Trucking accepted a quote proposal.',
+      secondaryContent: 'You\'ve bound another account! 🎉',
+      timestamp: '1 hour ago',
+    },
+    {
+      id: '3',
+      content: 'Great Trucking accepted a quote proposal.',
+      secondaryContent: 'You\'ve bound another account! 🎉',
+      timestamp: 'Yesterday',
+    },
+    {
+      id: '4',
+      content: 'ABCD Transport Solutions added 5 drivers.',
+      timestamp: '01/15/25',
+    },
+  ];
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -44,114 +196,88 @@ export default function BrokerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header/Navbar */}
-      <nav className="w-full bg-white border-b border-[#007B87] py-3 px-6 shadow-sm">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="flex items-center">
-              <ResponsiveImage 
-                src="/images/intact-logo.svg" 
-                alt="Intact Insurance Logo" 
-                width={120} 
-                height={40} 
-                priority
-              />
-            </Link>
-            <span className="text-[#333333] font-medium text-lg ml-4 font-['Slate Std']">
-              Broker Dashboard
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Welcome,</p>
-              <p className="font-medium">{user?.name || 'Broker'}</p>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="border-2 border-[#007B87] text-[#007B87] font-semibold px-4 py-2 rounded flex items-center gap-2 hover:bg-[#007B87] hover:text-white transition-colors"
-            >
-              Logout
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 12V15C12 15.2652 11.8946 15.5196 11.7071 15.7071C11.5196 15.8946 11.2652 16 11 16H1C0.734784 16 0.48043 15.8946 0.292893 15.7071C0.105357 15.5196 0 15.2652 0 15V1C0 0.734784 0.105357 0.48043 0.292893 0.292893C0.48043 0.105357 0.734784 0 1 0H11C11.2652 0 11.5196 0.105357 11.7071 0.292893C11.8946 0.48043 12 0.734784 12 1V4H10V2H2V14H10V12H12Z" fill="currentColor"/>
-                <path d="M16 8L12 4V7H5V9H12V12L16 8Z" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
+      {/* Header */}
+      <Header user={user} onLogout={handleLogout} />
+      
+      {/* Main Navigation */}
+      <MainNavigation activeTab="dashboard" />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-8 px-6">
-        <h1 className="text-3xl font-bold text-[#333333] mb-8">Broker Dashboard</h1>
+        {/* Status Tabs */}
+        <StatusTabs 
+          tabs={statusTabs} 
+          activeTab={activeStatusTab} 
+          onTabChange={setActiveStatusTab} 
+        />
         
-        {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <h2 className="text-xl font-semibold mb-4 text-[#007B87]">Active Submissions</h2>
-            <p className="text-3xl font-bold mb-2">0</p>
-            <p className="text-sm text-gray-600">No active submissions</p>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Activity Cards */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Search Input */}
+            <SearchInput 
+              value={searchQuery} 
+              onChange={setSearchQuery} 
+              placeholder="Search by company name, DOT number, etc." 
+            />
+            
+            {/* Activity Cards */}
+            <div className="space-y-6">
+              {activityCards.map((card, index) => (
+                <ActivityCard
+                  key={index}
+                  {...card}
+                  onEdit={() => console.log(`Edit ${card.companyName}`)}
+                />
+              ))}
+            </div>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <h2 className="text-xl font-semibold mb-4 text-[#007B87]">Completed Quotes</h2>
-            <p className="text-3xl font-bold mb-2">0</p>
-            <p className="text-sm text-gray-600">No completed quotes</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <h2 className="text-xl font-semibold mb-4 text-[#007B87]">Policies Issued</h2>
-            <p className="text-3xl font-bold mb-2">0</p>
-            <p className="text-sm text-gray-600">No policies issued</p>
-          </div>
-        </div>
-        
-        {/* Create New Submission Button */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Create New Submission</h2>
-          <p className="mb-4 text-gray-700">Start a new submission on behalf of a Motor Carrier to get a quote.</p>
-          <Link 
-            href="/submission/coverage"
-            className="bg-[#007B87] text-white font-semibold px-6 py-3 rounded flex items-center gap-2 hover:bg-[#005F69] transition-colors inline-block"
-          >
-            New Submission
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="currentColor"/>
-            </svg>
-          </Link>
-        </div>
-        
-        {/* Recent Submissions Table */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4">Recent Submissions</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Motor Carrier
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    DOT Number
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date Created
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center" colSpan={5}>
-                    No submissions found
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Action Buttons */}
+            <div className="grid grid-cols-3 gap-4">
+              <ActionButton
+                icon={
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM17 13H13V17H11V13H7V11H11V7H13V11H17V13Z" fill="currentColor"/>
+                  </svg>
+                }
+                label="Start Submission"
+                onClick={() => router.push('/submission/coverage')}
+              />
+              <ActionButton
+                icon={
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM12 17C10.9 17 10 16.1 10 15C10 13.9 10.9 13 12 13C13.1 13 14 13.9 14 15C14 16.1 13.1 17 12 17ZM15 8H9V6C9 4.34 10.34 3 12 3C13.66 3 15 4.34 15 6V8Z" fill="currentColor"/>
+                  </svg>
+                }
+                label="Submit a Claim"
+                onClick={() => console.log('Submit a claim')}
+              />
+              <ActionButton
+                icon={
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z" fill="currentColor"/>
+                  </svg>
+                }
+                label="Create a Report"
+                onClick={() => console.log('Create a report')}
+              />
+            </div>
+            
+            {/* Tasks List */}
+            <TaskList 
+              tasks={tasks} 
+              onTaskSelect={(index) => console.log(`Selected task ${index}`)} 
+            />
+            
+            {/* Activity Feed */}
+            <div>
+              <h3 className="font-semibold text-[#333333] mb-2">Recent Activity</h3>
+              <ActivityFeed activities={activities} />
+            </div>
           </div>
         </div>
       </div>
