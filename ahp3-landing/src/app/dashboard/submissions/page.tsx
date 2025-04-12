@@ -54,7 +54,7 @@ export default function SubmissionsPage() {
       <MainNavigation activeTab="submissions" />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-8 px-6">
+      <div className="w-full py-8 px-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-2xl font-semibold text-[#333333] mb-6">Submissions</h1>
           

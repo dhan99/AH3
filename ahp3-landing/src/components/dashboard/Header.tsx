@@ -46,15 +46,25 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
             Commercial Trucking Insurance
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-0">
+          {/*
           <div className="text-right mr-2">
             <p className="text-sm text-gray-600">Welcome,</p>
             <p className="font-medium">{user?.name || 'Demo Broker'}</p>
           </div>
+          */}
+          <div className="w-8 h-8 mt-1 flex-shrink-0">
+            <ResponsiveImage 
+              src="/images/person2-icon.svg" 
+              alt="Placeholder text to come"
+              width={8} 
+              height={8} 
+            />
+          </div>
           <div className="relative" ref={dropdownRef}>
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="border-2 border-[#007B87] text-[#007B87] font-semibold px-4 py-2 rounded flex items-center gap-2 hover:bg-[#007B87] hover:text-white transition-colors"
+              className="border-0 border-[#007B87] text-[#007B87] font-semibold px-4 py-2 rounded flex items-center gap-2 hover:bg-[#007B87] hover:text-white transition-colors"
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
             >

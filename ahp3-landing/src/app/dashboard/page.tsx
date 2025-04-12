@@ -203,7 +203,7 @@ export default function BrokerDashboard() {
       <MainNavigation activeTab="dashboard" />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-8 px-6">
+      <div className="w-full py-8 px-6">
         {/* Three-column layout with further adjusted widths */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column - Status Tabs and Activity Cards */}
