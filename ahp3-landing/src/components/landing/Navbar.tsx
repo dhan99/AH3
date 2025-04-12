@@ -33,7 +33,7 @@ export const Navbar = () => {
 
   return (
     <nav className="w-full bg-white border-b border-[#007B87] py-3 px-6">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="w-full flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center">
             <ResponsiveImage 
@@ -44,7 +44,7 @@ export const Navbar = () => {
               priority
             />
           </Link>
-          <span className="text-[#333333] font-medium text-xl ml-4 font-['Slate Std']">
+          <span className="text-[#333333] font-bold text-xl ml-4 font-['Slate Std']">
             Commercial Trucking Insurance
           </span>
         </div>

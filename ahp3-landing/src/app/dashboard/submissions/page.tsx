@@ -55,10 +55,23 @@ export default function SubmissionsPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-8 px-6">
-        <h1 className="text-3xl font-bold text-[#333333] mb-8">Submissions</h1>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <p className="text-lg text-gray-700">Submissions page content will go here.</p>
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h1 className="text-2xl font-semibold text-[#333333] mb-6">Submissions</h1>
+          
+          <div className="grid grid-cols-1 gap-6">
+            <div className="bg-[#F5F8FA] p-6 rounded-lg">
+              <h2 className="text-lg font-medium text-[#007B87] mb-4">Recent Submissions</h2>
+              
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  This page will display a list of all submissions, with filters for status, date range, and other criteria.
+                </p>
+                <p className="text-gray-600">
+                  Users will be able to create new submissions, edit existing ones, and track their progress through the underwriting process.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

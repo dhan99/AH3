@@ -206,7 +206,7 @@ export default function BrokerDashboard() {
       <div className="max-w-7xl mx-auto py-8 px-6">
         {/* Three-column layout with further adjusted widths */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column - Status Tabs and Activity Cards (reduced by 10% to 6/12 width) */}
+          {/* Left Column - Status Tabs and Activity Cards */}
           <div className="lg:col-span-6">
             {/* Status Tabs */}
             <StatusTabs 
@@ -236,7 +236,7 @@ export default function BrokerDashboard() {
             </div>
           </div>
           
-          {/* Middle Column - Tasks List (reduced to 4/12 width) */}
+          {/* Middle Column - Tasks List */}
           <div className="lg:col-span-4">
             {/* Tasks List */}
             <TaskList 
@@ -251,10 +251,10 @@ export default function BrokerDashboard() {
             </div>
           </div>
           
-          {/* Right Column - Action Buttons (increased width to 2/12) */}
+          {/* Right Column - Action Buttons */}
           <div className="lg:col-span-2">
-            {/* Action Buttons - Vertically stacked and right-aligned */}
-            <div className="space-y-4 flex flex-col items-end">
+            {/* Action Buttons - Vertically stacked and right-aligned with proper spacing per Figma */}
+            <div className="space-y-6 flex flex-col items-end">
               <ActionButton
                 icon={
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
