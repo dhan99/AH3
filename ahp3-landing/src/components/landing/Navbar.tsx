@@ -32,7 +32,7 @@ export const Navbar = () => {
   }, []);
 
   return (
-    <nav className="w-full bg-white border-b border-[#007B87] py-3 px-6">
+    <nav className="w-full bg-white border-b border-[#007B87] py-5 px-6">
       <div className="w-full flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center">
@@ -44,14 +44,14 @@ export const Navbar = () => {
               priority
             />
           </Link>
-          <span className="text-[#333333] font-bold text-xl ml-4 font-['Slate Std']">
+          <span className="text-[#333333] font-bold text-3xl ml-4 font-['Slate Std']">
             Commercial Trucking Insurance
           </span>
         </div>
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="border-2 border-[#007B87] text-[#007B87] font-semibold px-4 py-2 rounded flex items-center gap-2 hover:bg-[#007B87] hover:text-white transition-colors"
+            className="border-2 border-[#007B87] text-[#007B87] text-lg font-semibold px-4 py-2 rounded flex items-center gap-2 hover:bg-[#007B87] hover:text-white transition-colors"
             aria-expanded={isDropdownOpen}
             aria-haspopup="true"
           >

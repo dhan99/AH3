@@ -12,10 +12,10 @@ const NavItem: React.FC<NavItemProps> = ({ href, label, isActive }) => {
   return (
     <Link
       href={href}
-      className={`px-4 py-2 text-base font-semibold relative ${
+      className={`px-4 py-2 text-xl font-semibold relative ${
         isActive 
           ? 'text-[#007B87] after:absolute after:bottom-0 after:left-0 after:w-full after:h-1 after:bg-[#00B3BC]' 
-          : 'text-[#333333] hover:text-[#007B87]'
+          : 'text-[#007B87] hover:text-[#333333]'
       }`}
     >
       {label}

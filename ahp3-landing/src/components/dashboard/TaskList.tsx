@@ -19,7 +19,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskSelect }) => {
   return (
     <div className="bg-[#E6EEEF] rounded-lg overflow-hidden">
       <div className="bg-gradient-to-b from-[#F5F8FA] to-[#D3E3E5] py-2 px-4">
-        <h3 className="font-semibold text-[#333333]">Tasks</h3>
+        <h3 className="font-semibold text-[#333333] text-xl ">Tasks</h3>
       </div>
       <div className="divide-y divide-gray-100">
         {tasks.length > 0 ? (

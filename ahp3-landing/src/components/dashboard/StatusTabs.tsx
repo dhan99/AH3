@@ -18,7 +18,7 @@ const StatusTab: React.FC<StatusTabProps> = ({ label, count, isActive, onClick }
       }`}
     >
       <span className={`text-xl font-bold ${isActive ? 'text-white' : 'text-[#007B87]'}`}>{count}</span>
-      <span className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-gray-700'}`}>{label}</span>
+      <span className={`text-medium font-semibold ${isActive ? 'text-white' : 'text-gray-700'}`}>{label}</span>
     </button>
   );
 };

@@ -46,9 +46,9 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
     <div className="w-full rounded-lg border border-[#E6EEEF] overflow-hidden shadow-sm">
       {/* Header */}
       <div className="p-4 flex justify-between items-center bg-gradient-to-r from-[#E7F2EC] to-[#D3E3E5]">
-        <h3 className="text-[#007B87] font-semibold text-base">{companyName}</h3>
-        <div className="px-2 py-1 rounded-full text-xs font-semibold inline-flex items-center justify-center" style={{minWidth: '80px'}}>
-          <span className={`${statusColor} px-2 py-1 rounded-full text-xs font-semibold`}>
+        <h3 className="text-[#007B87] font-semibold text-lg">{companyName}</h3>
+        <div className="px-2 py-1 rounded-full text-medium font-semibold inline-flex items-center justify-center" style={{minWidth: '80px'}}>
+          <span className={`${statusColor} px-2 py-1 rounded-full text-medium font-semibold`}>
             {status}
           </span>
         </div>
@@ -56,7 +56,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
 
       {/* Content */}
       <div className="p-4 bg-white">
-        <div className="grid grid-cols-4 gap-4 text-xs text-[#333333]">
+        <div className="grid grid-cols-4 gap-4 text-medium text-[#333333]">
           <div className="space-y-2">
             <p>DOT Number</p>
             <p># units</p>
@@ -99,7 +99,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
         <div className="mt-4 text-right">
           <button
             onClick={onEdit}
-            className="text-[#007B87] font-semibold text-xs hover:underline"
+            className="text-[#007B87] font-semibold text-medium hover:underline"
           >
             Edit
           </button>
