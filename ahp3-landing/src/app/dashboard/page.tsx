@@ -204,26 +204,28 @@ export default function BrokerDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-8 px-6">
-        {/* Status Tabs */}
-        <StatusTabs 
-          tabs={statusTabs} 
-          activeTab={activeStatusTab} 
-          onTabChange={setActiveStatusTab} 
-        />
-        
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Activity Cards */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Search Input */}
-            <SearchInput 
-              value={searchQuery} 
-              onChange={setSearchQuery} 
-              placeholder="Search by company name, DOT number, etc." 
+        {/* Three-column layout with further adjusted widths */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column - Status Tabs and Activity Cards (reduced by 10% to 6/12 width) */}
+          <div className="lg:col-span-6">
+            {/* Status Tabs */}
+            <StatusTabs 
+              tabs={statusTabs} 
+              activeTab={activeStatusTab} 
+              onTabChange={setActiveStatusTab} 
             />
             
+            {/* Search Input */}
+            <div className="mt-6">
+              <SearchInput 
+                value={searchQuery} 
+                onChange={setSearchQuery} 
+                placeholder="Search by company name, DOT number, etc." 
+              />
+            </div>
+            
             {/* Activity Cards */}
-            <div className="space-y-6">
+            <div className="mt-6 space-y-6">
               {activityCards.map((card, index) => (
                 <ActivityCard
                   key={index}
@@ -234,10 +236,25 @@ export default function BrokerDashboard() {
             </div>
           </div>
           
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Action Buttons */}
-            <div className="grid grid-cols-3 gap-4">
+          {/* Middle Column - Tasks List (reduced to 4/12 width) */}
+          <div className="lg:col-span-4">
+            {/* Tasks List */}
+            <TaskList 
+              tasks={tasks} 
+              onTaskSelect={(index) => console.log(`Selected task ${index}`)} 
+            />
+            
+            {/* Activity Feed */}
+            <div className="mt-6">
+              <h3 className="font-semibold text-[#333333] mb-2">Recent Activity</h3>
+              <ActivityFeed activities={activities} />
+            </div>
+          </div>
+          
+          {/* Right Column - Action Buttons (increased width to 2/12) */}
+          <div className="lg:col-span-2">
+            {/* Action Buttons - Vertically stacked and right-aligned */}
+            <div className="space-y-4 flex flex-col items-end">
               <ActionButton
                 icon={
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -247,6 +264,7 @@ export default function BrokerDashboard() {
                 label="Start Submission"
                 onClick={() => router.push('/submission/coverage')}
               />
+              
               <ActionButton
                 icon={
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -256,6 +274,7 @@ export default function BrokerDashboard() {
                 label="Submit a Claim"
                 onClick={() => console.log('Submit a claim')}
               />
+              
               <ActionButton
                 icon={
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -265,18 +284,6 @@ export default function BrokerDashboard() {
                 label="Create a Report"
                 onClick={() => console.log('Create a report')}
               />
-            </div>
-            
-            {/* Tasks List */}
-            <TaskList 
-              tasks={tasks} 
-              onTaskSelect={(index) => console.log(`Selected task ${index}`)} 
-            />
-            
-            {/* Activity Feed */}
-            <div>
-              <h3 className="font-semibold text-[#333333] mb-2">Recent Activity</h3>
-              <ActivityFeed activities={activities} />
             </div>
           </div>
         </div>
