@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
-import { ResponsiveImage } from '@/components/ui';
-import Link from 'next/link';
+import { Header, MainNavigation } from '@/components/dashboard';
+import { Breadcrumb, ProgressStepper } from '@/components/submission';
 
 export default function DotQuestionnaire() {
   const router = useRouter();
@@ -64,10 +64,6 @@ export default function DotQuestionnaire() {
       router.push('/');
     }
   }, [isAuthenticated, isLoading, router]);
-
-  const handleLogout = () => {
-    logout({ logoutParams: { returnTo: window.location.origin } });
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -170,6 +166,44 @@ export default function DotQuestionnaire() {
     }
   };
 
+  // Define steps for progress sidebar
+  const steps = [
+    {
+      stepNumber: 1,
+      title: 'Start New Submission',
+      isActive: false,
+      isCompleted: true
+    },
+    {
+      stepNumber: 2,
+      title: 'Motor Carrier Details',
+      isActive: true,
+      isCompleted: false,
+      subsections: [
+        { title: 'DOT Information', isActive: true }
+      ]
+    },
+    {
+      stepNumber: 3,
+      title: 'Eligibility',
+      isActive: false,
+      isCompleted: false
+    },
+    {
+      stepNumber: 4,
+      title: 'Coverage and Plan Design',
+      isActive: false,
+      isCompleted: false
+    }
+  ];
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'New Submission', href: '/submission' },
+    { label: 'DOT Information', active: true }
+  ];
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -182,84 +216,31 @@ export default function DotQuestionnaire() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F8FB]">
       {/* Header/Navbar */}
-      <nav className="w-full bg-white border-b border-[#007B87] py-3 px-6 shadow-sm">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="flex items-center">
-              <ResponsiveImage 
-                src="/images/intact-logo.svg" 
-                alt="Intact Insurance Logo" 
-                width={120} 
-                height={40} 
-                priority
-              />
-            </Link>
-            <span className="text-[#333333] font-medium text-lg ml-4 font-['Slate Std']">
-              New Submission
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/dashboard"
-              className="text-[#007B87] font-semibold hover:underline"
-            >
-              Back to Dashboard
-            </Link>
-            <button 
-              onClick={handleLogout}
-              className="border-2 border-[#007B87] text-[#007B87] font-semibold px-4 py-2 rounded flex items-center gap-2 hover:bg-[#007B87] hover:text-white transition-colors"
-            >
-              Logout
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 12V15C12 15.2652 11.8946 15.5196 11.7071 15.7071C11.5196 15.8946 11.2652 16 11 16H1C0.734784 16 0.48043 15.8946 0.292893 15.7071C0.105357 15.5196 0 15.2652 0 15V1C0 0.734784 0.105357 0.48043 0.292893 0.292893C0.48043 0.105357 0.734784 0 1 0H11C11.2652 0 11.5196 0.105357 11.7071 0.292893C11.8946 0.48043 12 0.734784 12 1V4H10V2H2V14H10V12H12Z" fill="currentColor"/>
-                <path d="M16 8L12 4V7H5V9H12V12L16 8Z" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Progress Indicator */}
-      <div className="bg-white border-b border-gray-200 py-4">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-[#007B87] text-white flex items-center justify-center font-semibold">
-                ✓
-              </div>
-              <span className="text-sm mt-1 font-medium text-[#007B87]">Coverage</span>
-            </div>
-            <div className="flex-1 h-1 bg-[#007B87] mx-2"></div>
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-[#007B87] text-white flex items-center justify-center font-semibold">
-                2
-              </div>
-              <span className="text-sm mt-1 font-medium text-[#007B87]">DOT Info</span>
-            </div>
-            <div className="flex-1 h-1 bg-gray-200 mx-2">
-              <div className="h-full w-0 bg-[#007B87]"></div>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-semibold">
-                3
-              </div>
-              <span className="text-sm mt-1 text-gray-500">Eligibility</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <Header user={{}} onLogout={logout} />
+      
+      {/* Main Navigation */}
+      <MainNavigation activeTab="submissions" />
+      
+      {/* Breadcrumbs */}
+      <Breadcrumb items={breadcrumbItems} />
+      
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-8 px-6">
-        <div className="max-w-2xl mx-auto">
+      <div className="flex flex-row">
+        {/* Left Sidebar - Progress Stepper */}
+        <div className="min-w-[260px] border-r border-[#E6EEEF] shadow-sm bg-white">
+          <ProgressStepper steps={steps} />
+        </div>
+        
+        {/* Main Content */}
+        <div className="flex-1 p-8 bg-[#F9F8FB]">
           <h1 className="text-3xl font-bold text-[#333333] mb-2">DOT Information</h1>
           <p className="text-gray-600 mb-8">
             Please provide information about the Motor Carrier's DOT details.
           </p>
           
-          <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <form onSubmit={handleSubmit} className="bg-white p-6 rounded border border-[#D8D8D8]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label htmlFor="dotNumber" className="block text-sm font-medium text-gray-700 mb-1">
@@ -434,16 +415,17 @@ export default function DotQuestionnaire() {
               </div>
             )}
             
-            <div className="flex justify-between">
-              <Link
-                href="/submission/coverage"
+            <div className="flex justify-between mt-8">
+              <button
+                type="button"
+                onClick={() => router.push('/submission')}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center gap-2"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="rotate-180">
                   <path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="currentColor"/>
                 </svg>
                 Previous Step
-              </Link>
+              </button>
               <button
                 type="submit"
                 disabled={isSubmitting}

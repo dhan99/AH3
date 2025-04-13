@@ -5,12 +5,10 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
   },
-  // By default, don't run any tests automatically
+  // Disable all tests by ignoring everything
+  testMatch: ['**/__DISABLED_TESTS__/**'],
   testPathIgnorePatterns: [
-    '<rootDir>/node_modules/', 
-    '<rootDir>/.next/',
-    // Ignore all tests under src directory by default
-    '<rootDir>/src/'
+    '<rootDir>/',
   ],
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]

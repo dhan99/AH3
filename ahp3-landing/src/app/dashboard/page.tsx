@@ -266,7 +266,7 @@ export default function BrokerDashboard() {
                   </svg>
                 }
                 label="Start Submission"
-                onClick={() => router.push('/submission/coverage')}
+                onClick={() => router.push('/submission')}
               />
               
               <ActionButton
