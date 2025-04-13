@@ -2,6 +2,7 @@ import React from 'react';
 
 export interface ActivityItem {
   id: string;
+  company: string;
   content: string;
   secondaryContent?: string;
   timestamp: string;
@@ -19,7 +20,10 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, className = '' 
         {activities.map((activity) => (
           <div key={activity.id} className="mb-4 last:mb-0">
             <div className="flex flex-col gap-1">
-              <div className="text-sm text-[#000000]">{activity.content}</div>
+              <div> 
+                <span className="text-sm text-[#007B87]">{activity.company} </span> 
+                <span className="text-sm text-[#000000]">{activity.content}</span> 
+              </div>
               {activity.secondaryContent && (
                 <div className="text-sm text-[#000000]">{activity.secondaryContent}</div>
               )}

@@ -160,25 +160,29 @@ export default function BrokerDashboard() {
   const activities = [
     {
       id: '1',
-      content: 'Very Good Trucking accepted a quote proposal.',
+      company: 'Very Good Trucking',
+      content: 'accepted a quote proposal.',
       secondaryContent: 'You\'ve bound another account! 🎉',
       timestamp: '1 hour ago',
     },
     {
       id: '2',
-      content: 'Moderately Good Trucking accepted a quote proposal.',
+      company: 'Moderately Good Trucking',
+      content: 'accepted a quote proposal.',
       secondaryContent: 'You\'ve bound another account! 🎉',
       timestamp: '1 hour ago',
     },
     {
       id: '3',
-      content: 'Great Trucking accepted a quote proposal.',
+      company: 'Great Trucking',
+      content: 'accepted a quote proposal.',
       secondaryContent: 'You\'ve bound another account! 🎉',
       timestamp: 'Yesterday',
     },
     {
       id: '4',
-      content: 'ABCD Transport Solutions added 5 drivers.',
+      company: 'ABCD Transport Solutions',
+      content: 'added 5 drivers.',
       timestamp: '01/15/25',
     },
   ];
