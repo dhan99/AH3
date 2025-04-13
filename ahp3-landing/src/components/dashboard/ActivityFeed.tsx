@@ -19,11 +19,11 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, className = '' 
         {activities.map((activity) => (
           <div key={activity.id} className="mb-4 last:mb-0">
             <div className="flex flex-col gap-1">
-              <div className="text-medium text-[#000000]">{activity.content}</div>
+              <div className="text-sm text-[#000000]">{activity.content}</div>
               {activity.secondaryContent && (
-                <div className="text-medium text-[#000000]">{activity.secondaryContent}</div>
+                <div className="text-sm text-[#000000]">{activity.secondaryContent}</div>
               )}
-              <div className="text-sm text-[#757575]">{activity.timestamp}</div>
+              <div className="text-xs text-[#757575]">{activity.timestamp}</div>
             </div>
             <div className="border-b border-gray-100 mt-3"></div>
           </div>

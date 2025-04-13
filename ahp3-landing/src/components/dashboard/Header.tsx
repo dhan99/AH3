@@ -64,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
           <div className="relative" ref={dropdownRef}>
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="border-0 border-[#007B87] text-[#007B87] text-lg font-semibold px-4 py-2 rounded flex items-center gap-2 hover:bg-[#007B87] hover:text-white transition-colors"
+              className="border-0 border-[#007B87] text-[#007B87] text-medium font-semibold px-4 py-2 rounded flex items-center gap-2 hover:bg-[#007B87] hover:text-white transition-colors"
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
             >

@@ -25,20 +25,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
       onClick={onClick}
     >
       <div className="space-y-1">
-        <h4 className={`text-medium font-normal ${isSelected ? 'text-[#007B87]' : 'text-[#333333]'}`}>
+        <h4 className={`text-sm font-normal ${isSelected ? 'text-[#007B87]' : 'text-[#333333]'}`}>
           {company}
         </h4>
         <div className="flex flex-col mb-2">
-          <span className="text-medium font-semibold text-[#333333]">{taskType}</span>
+          <span className="text-sm font-semibold text-[#333333]">{taskType}</span>
         </div>
         <div className="flex justify-between">
-          <p className="text-sm text-[#333333]">{description}</p>
-          <p className="text-sm text-[#757575]">{dueDate}</p>
+          <p className="text-xs text-[#333333]">{description}</p>
+          <p className="text-xs text-[#757575]">{dueDate}</p>
         </div>
         
         {isSelected && (
           <div className="text-right mt-4">
-            <button className="text-sm text-[#007B87] font-semibold">
+            <button className="text-xs text-[#007B87] font-semibold">
               Clear task
             </button>
           </div>

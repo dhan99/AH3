@@ -12,10 +12,10 @@ const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onClick }) => 
       onClick={onClick}
       className="w-full bg-white rounded-lg border border-[#F0F0F0] shadow-md hover:shadow-lg transition-all p-4 flex flex-col items-center justify-center gap-3"
     >
-      <div className="text-[#007B87] text-2xl">
+      <div className="text-[#007B87] text-3xl">
         {icon}
       </div>
-      <span className="text-[#007B87] font-bold text-xl text-center">{label}</span>
+      <span className="text-[#007B87] font-bold text-lg text-center">{label}</span>
     </button>
   );
 };
