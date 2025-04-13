@@ -250,7 +250,7 @@ export default function BrokerDashboard() {
             
             {/* Activity Feed */}
             <div className="mt-6">
-              <h3 className="font-semibold text-[#333333] mb-2 text-lg text-center">Recent Activity</h3>
+              {/*<h3 className="font-semibold text-[#333333] mb-2 text-lg text-center">Recent Activity</h3>*/}
               <ActivityFeed activities={activities} />
             </div>
           </div>
