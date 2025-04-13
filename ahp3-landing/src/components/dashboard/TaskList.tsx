@@ -21,7 +21,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskSelect }) => {
       <div className="bg-gradient-to-b from-[#F5F8FA] to-[#D3E3E5] py-2 px-4">
         <h3 className="font-semibold text-[#333333] text-xl text-center">Tasks</h3>
       </div>
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-gray-100 space-y-0.5">
         {tasks.length > 0 ? (
           tasks.map((task, index) => (
             <TaskCard
