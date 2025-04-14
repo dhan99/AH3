@@ -171,10 +171,11 @@ export default function SubmissionPage() {
     }
   ];
 
-  // Breadcrumb items
+  // Breadcrumb items exactly matching Figma design
   const breadcrumbItems = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'New Submission', active: true }
+    { label: 'home', href: '/dashboard', isIcon: true },
+    { label: 'New Submission', href: '#' },
+    { label: 'Questionnaire', active: true }
   ];
 
   // Product selection handler
@@ -415,7 +416,7 @@ export default function SubmissionPage() {
           {products.map(product => (
             <div key={product.id} className="bg-white border border-[#D8D8D8] rounded-md overflow-hidden">
               <div className="flex">
-                <div className="w-full md:w-1/3 p-6 bg-[#F2FBFC] border-r border-[#D8D8D8]">
+                <div className="w-full md:w-[40%] p-6 bg-[#F2FBFC] border-r border-[#D8D8D8]">
                   <ProductDetailCard
                     title={product.title}
                     description={product.description}
@@ -468,16 +469,13 @@ export default function SubmissionPage() {
       {/* Header/Navbar */}
       <Header user={authUser || {}} onLogout={logout} />
       
-      {/* Main Navigation */}
-      <MainNavigation activeTab="submissions" />
-      
       {/* Breadcrumbs */}
       <Breadcrumb items={breadcrumbItems} />
       
       {/* Main Content */}
       <div className="flex flex-row">
         {/* Left Sidebar - Progress Stepper */}
-        <div className="min-w-[260px] border-r border-[#E6EEEF] shadow-sm bg-white">
+        <div className="min-w-[260px] shadow-sm bg-white">
           <ProgressStepper steps={steps} />
         </div>
         
@@ -486,7 +484,7 @@ export default function SubmissionPage() {
           <h1 className="text-3xl font-bold text-[#333333] mb-6">New Submission</h1>
           
           {/* Motor Carrier (Insured) Section */}
-          <div id="motorCarrierSection" className="bg-white rounded border border-[#E6EEEF] mb-6">
+          <div id="motorCarrierSection" className="bg-white rounded mb-6">
             <button 
               className="flex justify-between items-center p-[14px_12px] bg-[#F9F8FB] border-b border-[#E6EEEF] w-full"
               onClick={() => toggleSection('motorCarrier')}
@@ -629,7 +627,7 @@ export default function SubmissionPage() {
           </div>
           
           {/* Motor Carrier Contact Section - Using updated styling */}
-          <div id="motorCarrierContactSection" className="bg-white rounded border border-[#E6EEEF] mb-6">
+          <div id="motorCarrierContactSection" className="bg-white rounded mb-6">
             <button 
               className="flex justify-between items-center p-[14px_12px] bg-[#F9F8FB] border-b border-[#E6EEEF] w-full"
               onClick={() => toggleSection('motorCarrierContact')}
@@ -663,7 +661,7 @@ export default function SubmissionPage() {
           </div>
           
           {/* Coverage Section - Updated with Figma styling */}
-          <div className="bg-white rounded border border-[#E6EEEF] mb-6">
+          <div className="bg-white rounded mb-6">
             <button 
               className="flex justify-between items-center p-[14px_12px] bg-[#F9F8FB] border-b border-[#E6EEEF] w-full"
               onClick={() => toggleSection('coverage')}
@@ -686,9 +684,9 @@ export default function SubmissionPage() {
                 {/* Products */}
                 <div className="space-y-8">
                   {products.map(product => (
-                    <div key={product.id} className="bg-white border-0 border-[#D8D8D8] rounded-md overflow-hidden mb-8">
+                    <div key={product.id} className="bg-white rounded-md overflow-hidden mb-8 shadow-sm">
                       <div className="flex">
-                        <div className="w-full md:w-[40%] p-6 border-r-0 border-[#D8D8D8]">
+                        <div className="w-full md:w-[40%] p-6 bg-white">
                           <ProductDetailCard
                             title={product.title}
                             description={product.description}
@@ -697,17 +695,17 @@ export default function SubmissionPage() {
                             onSelect={() => handleProductSelect(product.id)}
                             coverageSections={[]}
                             showCoverageDetails={false}
-                            className=""
+                            className="border-0 shadow-none mb-0"
                             costHighlight={product.costHighlight}
                           />
                         </div>
                         
                         <div className="w-full md:w-[60%]">
-                          <div className="p-4 bg-[#FFFFFF]">
+                          <div className="p-4 bg-white">
                             <h3 className="font-semibold text-lg text-[#333333]">Included Benefits and Coverage</h3>
                           </div>
                           
-                          <div className="p-5 md:grid md:grid-cols-2 gap-4">
+                          <div className="p-4 md:grid md:grid-cols-2 gap-4">
                             {product.benefits.map((benefit, index) => (
                               <div key={index} className="mb-2">
                                 <p className="text-sm text-[#666666]">{benefit.label}</p>
@@ -717,7 +715,7 @@ export default function SubmissionPage() {
                           </div>
                           
                           {product.id === 'vehicle_physical_damage' && selectedProducts.includes(product.id) && (
-                            <div className="p-4 md:grid md:grid-cols-1 gap-4 border-t border-[#D8D8D8]">
+                            <div className="p-4 md:grid md:grid-cols-1 gap-4">
                               {product.additionalDetails}
                             </div>
                           )}
@@ -730,26 +728,27 @@ export default function SubmissionPage() {
             )}
           </div>
           
-          {/* Button Bar */}
-          <div className="flex justify-end mt-8 py-4 bg-[#E6EEEF] px-6">
-            <button
-              type="button"
-              onClick={handleNextStep}
-              className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69]"
-            >
-              Eligibility
-              <svg 
-                width="16" 
-                height="16" 
-                viewBox="0 0 16 16" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
         </div>
+      </div>
+
+      {/* Button Bar - Full width spanning both sidebar and main content */}
+      <div className="w-full flex justify-end py-4 bg-[#E6EEEF]">
+        <button
+          type="button"
+          onClick={handleNextStep}
+          className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69] mr-6"
+        >
+          Eligibility
+          <svg 
+            width="16" 
+            height="16" 
+            viewBox="0 0 16 16" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="currentColor"/>
+          </svg>
+        </button>
       </div>
 
       {/* Address Edit Modal */}
