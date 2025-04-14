@@ -40,7 +40,7 @@ const ProductDetailCard: React.FC<ProductDetailCardProps> = ({
   return (
     <div onClick={onSelect} className="w-full">
       <div className="flex flex-col">
-        <div className="flex items-start bg-[#F2FBFC] border border-[#007B87] border-2 shadow-[0px_1px_20px_4px_rgba(0,0,0,0.16)]">
+        <div className="flex items-start bg-[#F2FBFC] border border-[#007B87] border-2 shadow-[0px_0px_24px_rgba(0,0,0,0.20)]">
           <div className="flex-shrink-0 ml-4 mr-4 my-auto">
             <div className="w-12 h-12 flex items-center justify-center bg-[#F2FBFC] rounded-md">
                 <Image

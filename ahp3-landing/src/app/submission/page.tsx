@@ -686,9 +686,9 @@ export default function SubmissionPage() {
                 {/* Products */}
                 <div className="space-y-8">
                   {products.map(product => (
-                    <div key={product.id} className="bg-white border border-[#FFFFFF] rounded-md overflow-hidden mb-15">
+                    <div key={product.id} className="bg-white border-0 border-[#D8D8D8] rounded-md overflow-hidden mb-8">
                       <div className="flex">
-                        <div className="w-full md:w-35/100">
+                        <div className="w-full md:w-[40%] p-6 border-r-0 border-[#D8D8D8]">
                           <ProductDetailCard
                             title={product.title}
                             description={product.description}
@@ -697,13 +697,13 @@ export default function SubmissionPage() {
                             onSelect={() => handleProductSelect(product.id)}
                             coverageSections={[]}
                             showCoverageDetails={false}
-                            className="border-0 shadow-none mb-0"
+                            className=""
                             costHighlight={product.costHighlight}
                           />
                         </div>
                         
-                        <div className="w-full md:w-65/100">
-                          <div className="ml-5">
+                        <div className="w-full md:w-[60%]">
+                          <div className="p-4 bg-[#FFFFFF]">
                             <h3 className="font-semibold text-lg text-[#333333]">Included Benefits and Coverage</h3>
                           </div>
                           
