@@ -19,6 +19,8 @@ export default function SubmissionPage() {
   const { isAuthenticated, isLoading, logout, user: authUser } = useMockAuth();
   
   const [selectedProducts, setSelectedProducts] = useState(['occupational_accident', 'non_trucking_liability', 'vehicle_physical_damage']);
+  const [productSelectionValid, setProductSelectionValid] = useState(true);  // Default to true based on initial selected products
+  const [productValidationError, setProductValidationError] = useState('');
   
   // State for validation
   const [contactValidationTriggered, setContactValidationTriggered] = useState(false);
@@ -181,11 +183,24 @@ export default function SubmissionPage() {
   // Product selection handler
   const handleProductSelect = (productId: string) => {
     setSelectedProducts(prev => {
+      let newSelection;
       if (prev.includes(productId)) {
-        return prev.filter(id => id !== productId);
+        newSelection = prev.filter(id => id !== productId);
       } else {
-        return [...prev, productId];
+        newSelection = [...prev, productId];
       }
+      
+      // Validate the new selection
+      const isValid = newSelection.length > 0;
+      setProductSelectionValid(isValid);
+      
+      if (!isValid) {
+        setProductValidationError('Please select at least one coverage product');
+      } else {
+        setProductValidationError('');
+      }
+      
+      return newSelection;
     });
   };
 
@@ -352,6 +367,18 @@ export default function SubmissionPage() {
     if (!isContactValid) {
       setIsMCContactValid(false);
       document.getElementById('motorCarrierContactSection')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    
+    // Validate that at least one product is selected
+    if (!productSelectionValid) {
+      setProductValidationError('Please select at least one coverage product');
+      // Open the coverage section if it's closed
+      if (!openSections.coverage) {
+        setOpenSections(prev => ({...prev, coverage: true}));
+      }
+      // Scroll to the coverage section
+      document.getElementById('coverageSection')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
     
@@ -661,7 +688,7 @@ export default function SubmissionPage() {
           </div>
           
           {/* Coverage Section - Updated with Figma styling */}
-          <div className="bg-white rounded mb-6">
+          <div id="coverageSection" className="bg-white rounded mb-6">
             <button 
               className="flex justify-between items-center p-[14px_12px] bg-[#F9F8FB] border-b border-[#E6EEEF] w-full"
               onClick={() => toggleSection('coverage')}
@@ -681,6 +708,16 @@ export default function SubmissionPage() {
             
             {openSections.coverage && (
               <div className="p-8">
+                {/* Validation error message */}
+                {productValidationError && (
+                  <div className="bg-[#FFE6EC] border border-[#C60C30] rounded-md p-4 mb-6 flex">
+                    <div className="w-6 h-6 rounded-full bg-[#C60C30] text-white flex-shrink-0 flex items-center justify-center mr-4">
+                      <span className="text-sm font-bold">!</span>
+                    </div>
+                    <p className="text-sm text-[#333333]">{productValidationError}</p>
+                  </div>
+                )}
+                
                 {/* Products */}
                 <div className="space-y-8">
                   {products.map(product => (
