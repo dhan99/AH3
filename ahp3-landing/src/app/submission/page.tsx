@@ -8,7 +8,7 @@ import { Header, MainNavigation } from '@/components/dashboard';
 import {
   Breadcrumb,
   ProgressStepper,
-  ProductCard,
+  ProductDetailCard,
   AddressEditModal,
   MotorCarrierContact,
   ContactInfo
@@ -18,7 +18,7 @@ export default function SubmissionPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading, logout, user: authUser } = useMockAuth();
   
-  const [selectedProducts, setSelectedProducts] = useState(['occupational_accident']);
+  const [selectedProducts, setSelectedProducts] = useState(['occupational_accident', 'non_trucking_liability', 'vehicle_physical_damage']);
   
   // State for validation
   const [contactValidationTriggered, setContactValidationTriggered] = useState(false);
@@ -77,22 +77,24 @@ export default function SubmissionPage() {
       title: 'Occupational Accident',
       description: 'Essential coverage for independent contractors who are not eligible for workers\' compensation. Protects drivers by covering medical expenses, disability benefits, and accidental death in the event of a work related injury.',
       iconSrc: '/images/medical-icon.svg',
+      costHighlight: '$100-$500 per driver/month',
       benefits: [
         { label: 'Aggregate Limit of Liability', value: '$2,000,000' },
-        { label: 'Accidental Death Benefit', value: '$50,000 / 365 days' },
-        { label: 'Survivors Benefit', value: 'up to $200,000 / up to $2,000 month' },
-        { label: 'Acc Dismemberment Benefit', value: 'up to $250,000 / 365 days' },
         { label: 'Temporary Total Disability Benefit', value: '$125-700/week 10-104 weeks' },
+        { label: 'Accidental Death Benefit', value: '$50,000 / 365 days' },
         { label: 'Acc Med Expense Benefit', value: '$500,000' },
+        { label: 'Survivors Benefit', value: 'up to $200,000 / up to $2,000 month' },
         { label: 'Continuous Total Disability', value: '$50-$700/week' },
+        { label: 'Acc Dismemberment Benefit', value: 'up to $250,000 / 365 days' },
         { label: 'Accidental Medical Expense', value: '$1,000,000' }
       ]
     },
     {
       id: 'non_trucking_liability',
       title: 'Non-Trucking Liability',
-      description: 'Covers drivers when they are using the truck for non-business purposes, such as personal errands or commuting. This protection fills the gap when a driver is off dispatch, shielding them from potential liability claims that could otherwise be costly.',
-      iconSrc: '/images/broker-business-icon.svg',
+      description: 'Covers drivers for drivers when they are using the truck for non-business purposes, such as personal errands or commuting. This protection fills the gap when a driver is off dispatch, shielding them from potential liability claims that could otherwise be costly.',
+      iconSrc: '/images/hail-icon.svg',
+      costHighlight: '$75 per driver/month',
       benefits: [
         { label: 'Limit', value: '$1,000,000' },
         { label: 'Cost per unit', value: '$300' }
@@ -103,12 +105,38 @@ export default function SubmissionPage() {
       title: 'Vehicle Physical Damage',
       description: 'Pays for repairs or replacement of the truck in case of damage from accident, fire, theft, or natural disasters. This coverage helps protect a motor carrier\'s investment in equipment, ensuring the vehicle stays on the road with minimal financial setbacks.',
       iconSrc: '/images/vehicle-damage-icon.svg',
+      costHighlight: '3-5% of vehicle value/year',
       benefits: [
         { label: 'Any one covered truck/covered trailer', value: '$250,000' },
         { label: 'Any one Policy', value: '$5,000,000' },
         { label: 'Limit', value: '$1,000,000' },
-        { label: 'Cost per unit', value: '$300' }
-      ]
+        { label: 'Cost per unit', value: '$300' },
+      ],
+      additionalDetails: (
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-sm font-semibold text-[#333333] mb-2">Vehicle Physical Damage</h4>
+            <p className="text-sm text-[#333333]">Actual Cash Value, not to exceed Stated Value</p>
+            <p className="text-sm text-[#757575]">$1,000 Deductible</p>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-semibold text-[#333333] mb-2">Finance Agreement Gap</h4>
+            <p className="text-sm text-[#333333]">Greater of actual cash value or the outstanding financial obligation, not to exceed stated amount on applicable Certificate of Insurance.</p>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-semibold text-[#333333] mb-2">Truck Rental</h4>
+            <p className="text-sm text-[#333333]">Up to $100 per day for up to 14 days</p>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-semibold text-[#333333] mb-2">Personal Contents</h4>
+            <p className="text-sm text-[#333333]">Replacement cost or actual cash value to maximum of $5,000</p>
+            <p className="text-sm text-[#757575]">$250 Deductible</p>
+          </div>
+        </div>
+      )
     }
   ];
 
@@ -388,12 +416,15 @@ export default function SubmissionPage() {
             <div key={product.id} className="bg-white border border-[#D8D8D8] rounded-md overflow-hidden">
               <div className="flex">
                 <div className="w-full md:w-1/3 p-6 bg-[#F2FBFC] border-r border-[#D8D8D8]">
-                  <ProductCard
+                  <ProductDetailCard
                     title={product.title}
                     description={product.description}
                     iconSrc={product.iconSrc}
                     isSelected={selectedProducts.includes(product.id)}
                     onSelect={() => handleProductSelect(product.id)}
+                    coverageSections={[{ items: product.benefits }]}
+                    showCoverageDetails={false}
+                    className="border-0 shadow-none mb-0"
                   />
                 </div>
                 
@@ -655,24 +686,28 @@ export default function SubmissionPage() {
                 {/* Products */}
                 <div className="space-y-8">
                   {products.map(product => (
-                    <div key={product.id} className="bg-white border border-[#D8D8D8] rounded-md overflow-hidden">
+                    <div key={product.id} className="bg-white border border-[#FFFFFF] rounded-md overflow-hidden mb-15">
                       <div className="flex">
-                        <div className="w-full md:w-1/3 p-6 bg-[#F2FBFC] border-r border-[#D8D8D8]">
-                          <ProductCard
+                        <div className="w-full md:w-35/100">
+                          <ProductDetailCard
                             title={product.title}
                             description={product.description}
                             iconSrc={product.iconSrc}
                             isSelected={selectedProducts.includes(product.id)}
                             onSelect={() => handleProductSelect(product.id)}
+                            coverageSections={[]}
+                            showCoverageDetails={false}
+                            className="border-0 shadow-none mb-0"
+                            costHighlight={product.costHighlight}
                           />
                         </div>
                         
-                        <div className="w-full md:w-2/3">
-                          <div className="p-4 bg-[#E6EEEF]">
-                            <h3 className="font-semibold text-[#333333]">Included Benefits and Coverage</h3>
+                        <div className="w-full md:w-65/100">
+                          <div className="ml-5">
+                            <h3 className="font-semibold text-lg text-[#333333]">Included Benefits and Coverage</h3>
                           </div>
                           
-                          <div className="p-4 md:grid md:grid-cols-2 gap-4">
+                          <div className="p-5 md:grid md:grid-cols-2 gap-4">
                             {product.benefits.map((benefit, index) => (
                               <div key={index} className="mb-2">
                                 <p className="text-sm text-[#666666]">{benefit.label}</p>
@@ -680,6 +715,12 @@ export default function SubmissionPage() {
                               </div>
                             ))}
                           </div>
+                          
+                          {product.id === 'vehicle_physical_damage' && selectedProducts.includes(product.id) && (
+                            <div className="p-4 md:grid md:grid-cols-1 gap-4 border-t border-[#D8D8D8]">
+                              {product.additionalDetails}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
