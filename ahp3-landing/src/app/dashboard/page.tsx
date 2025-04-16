@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
 import useStore from '@/store/useStore';
+import { handleSignoff } from '@/utils/signoff';
 import Link from 'next/link';
+import { Notification } from '@/components/ui';
 
 import {
   Header,
@@ -25,6 +27,11 @@ export default function BrokerDashboard() {
   // Dashboard state
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStatusTab, setActiveStatusTab] = useState('drafted');
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success' as 'success' | 'error' | 'info'
+  });
   
   // Sync auth user with store
   useEffect(() => {
@@ -43,6 +50,14 @@ export default function BrokerDashboard() {
 
   const handleLogout = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
+  };
+  
+  // Handle closing the notification
+  const handleCloseNotification = () => {
+    setNotification({
+      ...notification,
+      isVisible: false
+    });
   };
 
   // Status tab data
@@ -200,6 +215,14 @@ export default function BrokerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Notification component */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.isVisible}
+        onClose={handleCloseNotification}
+        duration={4000}
+      />
       {/* Header */}
       <Header user={user} onLogout={handleLogout} />
       
@@ -266,7 +289,22 @@ export default function BrokerDashboard() {
                   </svg>
                 }
                 label="Start Submission"
-                onClick={() => router.push('/submission')}
+                onClick={() => {
+                  // Reset all store states before starting a new submission
+                  handleSignoff();
+                  
+                  // Show notification about starting new submission
+                  setNotification({
+                    isVisible: true,
+                    message: 'Starting a new submission with fresh data.',
+                    type: 'info'
+                  });
+                  
+                  // Add a small delay before redirecting to allow the notification to be seen
+                  setTimeout(() => {
+                    router.push('/submission');
+                  }, 1500);
+                }}
               />
               
               <ActionButton

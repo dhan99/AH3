@@ -242,11 +242,15 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
     
     // Special handling for the checkbox that controls address copying
     if (type === 'checkbox' && name === 'useAddressAbove') {
-      // If unchecking, we need to clear the address fields immediately
-      if (!checked) {
-        setContactInfo(prev => {
-          const updated = {
-            ...prev,
+      // If checking the box, update checkbox state only - useEffect will handle copying
+      // If unchecking, clear the address fields immediately
+      const updatedInfo = checked 
+        ? { 
+            ...contactInfo, 
+            useAddressAbove: true 
+          }
+        : {
+            ...contactInfo,
             useAddressAbove: false,
             streetAddress: '',
             city: '',
@@ -254,25 +258,12 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
             zipCode: ''
           };
           
-          // Notify parent component with cleared address
-          if (onDataChange) {
-            onDataChange(updated);
-          }
-          
-          return updated;
-        });
-      } else {
-        // Just update the checkbox state - the useEffect will handle copying the address
-        setContactInfo(prev => {
-          const updated = { ...prev, useAddressAbove: checked };
-          
-          // Notify parent about checkbox change
-          if (onDataChange) {
-            onDataChange(updated);
-          }
-          
-          return updated;
-        });
+      // Update state with new values
+      setContactInfo(updatedInfo);
+      
+      // Notify parent component
+      if (onDataChange) {
+        onDataChange(updatedInfo);
       }
     } else {
       // For all other fields, simple update
@@ -320,6 +311,15 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
               name="firstName"
               value={contactInfo.firstName}
               onChange={handleInputChange}
+              onBlur={() => {
+                // Validate firstName on blur
+                if (!contactInfo.firstName.trim()) {
+                  setValidationErrors(prev => ({
+                    ...prev,
+                    firstName: "First name is required"
+                  }));
+                }
+              }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('firstName')}`}
             />
             {validationErrors.firstName && (
@@ -336,6 +336,15 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
               name="lastName"
               value={contactInfo.lastName}
               onChange={handleInputChange}
+              onBlur={() => {
+                // Validate lastName on blur
+                if (!contactInfo.lastName.trim()) {
+                  setValidationErrors(prev => ({
+                    ...prev,
+                    lastName: "Last name is required"
+                  }));
+                }
+              }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('lastName')}`}
             />
             {validationErrors.lastName && (
@@ -369,6 +378,20 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
               name="email"
               value={contactInfo.email}
               onChange={handleInputChange}
+              onBlur={() => {
+                // Validate email on blur
+                if (!contactInfo.email.trim()) {
+                  setValidationErrors(prev => ({
+                    ...prev,
+                    email: "Email is required"
+                  }));
+                } else if (!/^\S+@\S+\.\S+$/.test(contactInfo.email)) {
+                  setValidationErrors(prev => ({
+                    ...prev,
+                    email: "Please enter a valid email address"
+                  }));
+                }
+              }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('email')}`}
             />
             {validationErrors.email && (
@@ -460,6 +483,15 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
             name="streetAddress"
             value={contactInfo.streetAddress}
             onChange={handleInputChange}
+            onBlur={() => {
+              // Validate street address on blur (only if not using address above)
+              if (!contactInfo.useAddressAbove && !contactInfo.streetAddress.trim()) {
+                setValidationErrors(prev => ({
+                  ...prev,
+                  streetAddress: "Street address is required"
+                }));
+              }
+            }}
             className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('streetAddress')}`}
             disabled={contactInfo.useAddressAbove}
           />
@@ -480,6 +512,15 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
               name="city"
               value={contactInfo.city}
               onChange={handleInputChange}
+              onBlur={() => {
+                // Validate city on blur (only if not using address above)
+                if (!contactInfo.useAddressAbove && !contactInfo.city.trim()) {
+                  setValidationErrors(prev => ({
+                    ...prev,
+                    city: "City is required"
+                  }));
+                }
+              }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('city')}`}
               disabled={contactInfo.useAddressAbove}
             />
@@ -496,6 +537,15 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
               name="state"
               value={contactInfo.state}
               onChange={handleInputChange}
+              onBlur={() => {
+                // Validate state on blur (only if not using address above)
+                if (!contactInfo.useAddressAbove && !contactInfo.state) {
+                  setValidationErrors(prev => ({
+                    ...prev,
+                    state: "State is required"
+                  }));
+                }
+              }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('state')}`}
               disabled={contactInfo.useAddressAbove}
             >
@@ -522,6 +572,15 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
               name="zipCode"
               value={contactInfo.zipCode}
               onChange={handleInputChange}
+              onBlur={() => {
+                // Validate zip code on blur (only if not using address above)
+                if (!contactInfo.useAddressAbove && !contactInfo.zipCode.trim()) {
+                  setValidationErrors(prev => ({
+                    ...prev,
+                    zipCode: "Zip code is required"
+                  }));
+                }
+              }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('zipCode')}`}
               disabled={contactInfo.useAddressAbove}
             />

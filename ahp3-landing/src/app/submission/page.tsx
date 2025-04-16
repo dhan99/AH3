@@ -1,75 +1,66 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
+import useSubmissionStore from '@/store/useSubmissionStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
-import { Header, MainNavigation } from '@/components/dashboard';
+import { Header } from '@/components/dashboard';
 import {
   Breadcrumb,
   ProgressStepper,
   ProductDetailCard,
   AddressEditModal,
   MotorCarrierContact,
-  ContactInfo
+  ContactInfo as MCContactInfo
 } from '@/components/submission';
+import Button from '@/components/ui/Button';
+
+// Declare the window property for validateContactInfo function
+declare global {
+  interface Window {
+    validateContactInfo?: () => boolean;
+  }
+}
 
 export default function SubmissionPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, logout, user: authUser } = useMockAuth();
+  const { isLoading, logout, user: authUser } = useMockAuth();
   
-  const [selectedProducts, setSelectedProducts] = useState(['occupational_accident', 'non_trucking_liability', 'vehicle_physical_damage']);
-  const [productSelectionValid, setProductSelectionValid] = useState(true);  // Default to true based on initial selected products
-  const [productValidationError, setProductValidationError] = useState('');
-  
-  // State for validation
+  // State that doesn't need to be persisted (UI state only)
   const [contactValidationTriggered, setContactValidationTriggered] = useState(false);
-  const [isContactValid, setIsContactValid] = useState(false);
   const [isMCContactValid, setIsMCContactValid] = useState(false);
-  const [contactData, setContactData] = useState<any>(null);
-  
-  // DOT search state
-  const [dotNumber, setDotNumber] = useState('');
   const [dotError, setDotError] = useState('');
   const [showAnimation, setShowAnimation] = useState(false);
-  const [isDOTValid, setIsDOTValid] = useState(false);
-  const [carrierInfo, setCarrierInfo] = useState<{
-    mcNumber: string;
-    name: string;
-    dbaName: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    vehicles: number;
-    warnings: string[];
-    errors: string[];
-    info: string[];
-  } | null>(null);
-  
-  // Address edit modal state
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [addressData, setAddressData] = useState({
-    streetAddress: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'USA'
-  });
+  const [mcContactError, setMcContactError] = useState('');
+  const [productSelectionValid, setProductSelectionValid] = useState(true);
+  const [productValidationError, setProductValidationError] = useState('');
   
-  // Track accordion open/closed state
-  const [openSections, setOpenSections] = useState({
-    motorCarrier: true, // Open by default
-    motorCarrierContact: true, // Open by default
-    coverage: true
-  });
+  // Access the store
+  const submissionStore = useSubmissionStore();
+  const {
+    dotNumber,
+    isDOTValid, 
+    carrierInfo,
+    addressData,
+    contactData,
+    isContactValid,
+    openSections,
+    selectedProducts,
+    setDotNumber,
+    setIsDOTValid,
+    setCarrierInfo,
+    setContactData,
+    setIsContactValid,
+    setAddressData,
+    setOpenSection,
+    setSelectedProducts
+  } = submissionStore;
   
   // Function to toggle accordion sections
   const toggleSection = (section: 'motorCarrier' | 'motorCarrierContact' | 'coverage') => {
-    setOpenSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+    setOpenSection(section, !openSections[section]);
   };
   
   // Products data from Figma design
@@ -182,26 +173,27 @@ export default function SubmissionPage() {
 
   // Product selection handler
   const handleProductSelect = (productId: string) => {
-    setSelectedProducts(prev => {
-      let newSelection;
-      if (prev.includes(productId)) {
-        newSelection = prev.filter(id => id !== productId);
-      } else {
-        newSelection = [...prev, productId];
-      }
-      
-      // Validate the new selection
-      const isValid = newSelection.length > 0;
-      setProductSelectionValid(isValid);
-      
-      if (!isValid) {
-        setProductValidationError('Please select at least one coverage product');
-      } else {
-        setProductValidationError('');
-      }
-      
-      return newSelection;
-    });
+    const prevProducts = selectedProducts;
+    let newSelection;
+    
+    if (prevProducts.includes(productId)) {
+      newSelection = prevProducts.filter(id => id !== productId);
+    } else {
+      newSelection = [...prevProducts, productId];
+    }
+    
+    // Validate the new selection
+    const isValid = newSelection.length > 0;
+    setProductSelectionValid(isValid);
+    
+    if (!isValid) {
+      setProductValidationError('Please select at least one coverage product');
+    } else {
+      setProductValidationError('');
+    }
+    
+    // Update the store
+    setSelectedProducts(newSelection);
   };
 
   // Handle DOT search input change
@@ -333,9 +325,48 @@ export default function SubmissionPage() {
     setIsContactValid(isValid);
   };
   
+  // Create a helper to convert store ContactInfo to MCContactInfo
+  const convertStoreContactInfoToMC = () => {
+    if (!contactData) return undefined;
+    
+    // Create a state object to return to the component
+    // We need to preserve the address and useAddressAbove flag
+    const mcContactInfo: MCContactInfo = {
+      firstName: contactData.firstName || '',
+      lastName: contactData.lastName || '',
+      title: '',
+      email: contactData.email || '',
+      phone: contactData.phone || '',
+      // Use the stored address data if we have it, otherwise use empty strings
+      useAddressAbove: true, // Set to true by default if we have carrier info
+      streetAddress: carrierInfo?.address || '',
+      city: carrierInfo?.city || '',
+      state: carrierInfo?.state || '',
+      zipCode: carrierInfo?.zipCode || ''
+    };
+    
+    return mcContactInfo;
+  };
+  
   // Handler function for when contact data changes
-  const handleContactDataChange = (data: ContactInfo) => {
-    setContactData(data);
+  const handleContactDataChange = (data: MCContactInfo) => {
+    // Store the contact info basics
+    setContactData({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      role: 'Contact' // Default role since MCContactInfo doesn't have this property
+    });
+    
+    // If useAddressAbove is checked, copy the carrier address to the contact's address
+    if (data.useAddressAbove && carrierInfo) {
+      // The component will handle updating its internal state
+      // We don't need to store the address in contactData as it will use carrierInfo's address
+    } else if (!data.useAddressAbove) {
+      // If not using address above, we would store the separate address if needed
+      // But the current store design doesn't have address fields in contactData
+    }
   };
   
   // Handler function for Motor Carrier Contact validation
@@ -356,18 +387,28 @@ export default function SubmissionPage() {
     }
     
     // Then validate Motor Carrier Contact
-    let isContactValid = true;
+    let contactValid = true;
     
     // Access the validateContactInfo function from the window object
     if (window.validateContactInfo) {
-      isContactValid = window.validateContactInfo();
+      contactValid = window.validateContactInfo();
     }
     
-    // If contact validation fails, scroll to that section
-    if (!isContactValid) {
+    // If contact validation fails, set error message and scroll to that section
+    if (!contactValid) {
       setIsMCContactValid(false);
+      setMcContactError('Please complete all required fields in the Motor Carrier Contact section');
+      
+      // Open the section if it's closed
+      if (!openSections.motorCarrierContact) {
+        setOpenSection('motorCarrierContact', true);
+      }
+      
       document.getElementById('motorCarrierContactSection')?.scrollIntoView({ behavior: 'smooth' });
       return;
+    } else {
+      // Clear error if previously set
+      setMcContactError('');
     }
     
     // Validate that at least one product is selected
@@ -375,7 +416,7 @@ export default function SubmissionPage() {
       setProductValidationError('Please select at least one coverage product');
       // Open the coverage section if it's closed
       if (!openSections.coverage) {
-        setOpenSections(prev => ({...prev, coverage: true}));
+        setOpenSection('coverage', true);
       }
       // Scroll to the coverage section
       document.getElementById('coverageSection')?.scrollIntoView({ behavior: 'smooth' });
@@ -386,98 +427,8 @@ export default function SubmissionPage() {
     setIsMCContactValid(true);
     
     // If all validations pass, proceed to next step
-    router.push('/submission/dot');
+    router.push('/submission/eligibility');
   };
-
-  // Memoized sections to prevent re-renders - Defined after all handler functions
-  const motorCarrierContactSection = useMemo(() => (
-    <div className="bg-white rounded border border-[#D8D8D8] mb-6">
-      <button 
-        className="flex justify-between items-center p-4 border-b border-[#D8D8D8] w-full"
-        onClick={() => toggleSection('motorCarrierContact')}
-      >
-        <h2 className="text-xl font-semibold text-[#333333]">Motor Carrier Contact</h2>
-        <svg 
-          width="24" 
-          height="24" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          className={`transform transition-transform ${openSections.motorCarrierContact ? 'rotate-180' : ''}`}
-        >
-          <path d="M6 9L12 15L18 9" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      
-      {openSections.motorCarrierContact && (
-        <div className="p-4">
-          <p className="text-[#666666]">Contact information would go here</p>
-        </div>
-      )}
-    </div>
-  ), [openSections.motorCarrierContact, toggleSection]);
-
-  const coverageSection = useMemo(() => (
-    <div className="bg-white rounded border border-[#D8D8D8] mb-6">
-      <button 
-        className="flex justify-between items-center p-4 border-b border-[#D8D8D8] w-full"
-        onClick={() => toggleSection('coverage')}
-      >
-        <h2 className="text-xl font-semibold text-[#333333]">Coverage</h2>
-        <svg 
-          width="24" 
-          height="24" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          className={`transform transition-transform ${openSections.coverage ? 'rotate-180' : ''}`}
-        >
-          <path d="M6 9L12 15L18 9" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      
-      {openSections.coverage && (
-        <div className="p-8">
-        {/* Products */}
-        <div className="space-y-8">
-          {products.map(product => (
-            <div key={product.id} className="bg-white border border-[#D8D8D8] rounded-md overflow-hidden">
-              <div className="flex">
-                <div className="w-full md:w-[40%] p-6 bg-[#F2FBFC] border-r border-[#D8D8D8]">
-                  <ProductDetailCard
-                    title={product.title}
-                    description={product.description}
-                    iconSrc={product.iconSrc}
-                    isSelected={selectedProducts.includes(product.id)}
-                    onSelect={() => handleProductSelect(product.id)}
-                    coverageSections={[{ items: product.benefits }]}
-                    showCoverageDetails={false}
-                    className="border-0 shadow-none mb-0"
-                  />
-                </div>
-                
-                <div className="w-full md:w-2/3">
-                  <div className="p-4 bg-[#E6EEEF]">
-                    <h3 className="font-semibold text-[#333333]">Included Benefits and Coverage</h3>
-                  </div>
-                  
-                  <div className="p-4 md:grid md:grid-cols-2 gap-4">
-                    {product.benefits.map((benefit, index) => (
-                      <div key={index} className="mb-2">
-                        <p className="text-sm text-[#666666]">{benefit.label}</p>
-                        <p className="font-semibold text-[#333333]">{benefit.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      )}
-    </div>
-  ), [openSections.coverage, products, selectedProducts, handleProductSelect]);
 
   // Loading state
   if (isLoading) {
@@ -502,7 +453,7 @@ export default function SubmissionPage() {
       {/* Main Content */}
       <div className="flex flex-row">
         {/* Left Sidebar - Progress Stepper */}
-        <div className="min-w-[260px] shadow-sm bg-white">
+        <div className="min-w-[260px] shadow-sm-0 bg-white">
           <ProgressStepper steps={steps} />
         </div>
         
@@ -673,17 +624,29 @@ export default function SubmissionPage() {
             </button>
             
             {openSections.motorCarrierContact && (
-              <MotorCarrierContact 
-                dotAddressData={carrierInfo ? {
-                  streetAddress: carrierInfo.address,
-                  city: carrierInfo.city,
-                  state: carrierInfo.state,
-                  zipCode: carrierInfo.zipCode
-                } : null}
-                onValidationChange={handleMCContactValidationChange}
-                onDataChange={handleContactDataChange}
-                initialData={contactData}
-              />
+              <div>
+                {/* Motor Carrier Contact validation error message */}
+                {mcContactError && (
+                  <div className="bg-[#FFE6EC] border border-[#C60C30] rounded-md p-4 m-6 mb-0 flex">
+                    <div className="w-6 h-6 rounded-full bg-[#C60C30] text-white flex-shrink-0 flex items-center justify-center mr-4">
+                      <span className="text-sm font-bold">!</span>
+                    </div>
+                    <p className="text-sm text-[#333333]">{mcContactError}</p>
+                  </div>
+                )}
+                
+                <MotorCarrierContact 
+                  dotAddressData={carrierInfo ? {
+                    streetAddress: carrierInfo.address,
+                    city: carrierInfo.city,
+                    state: carrierInfo.state,
+                    zipCode: carrierInfo.zipCode
+                  } : null}
+                  onValidationChange={handleMCContactValidationChange}
+                  onDataChange={handleContactDataChange}
+                  initialData={convertStoreContactInfoToMC()}
+                />
+              </div>
             )}
           </div>
           
@@ -721,7 +684,7 @@ export default function SubmissionPage() {
                 {/* Products */}
                 <div className="space-y-8">
                   {products.map(product => (
-                    <div key={product.id} className="bg-white rounded-md overflow-hidden mb-8 shadow-sm">
+                    <div key={product.id} className="bg-white rounded-md overflow-hidden mb-8 shadow-sm-0">
                       <div className="flex">
                         <div className="w-full md:w-[40%] p-6 bg-white">
                           <ProductDetailCard
@@ -752,7 +715,7 @@ export default function SubmissionPage() {
                           </div>
                           
                           {product.id === 'vehicle_physical_damage' && selectedProducts.includes(product.id) && (
-                            <div className="p-4 md:grid md:grid-cols-1 gap-4">
+                            <div className="p-4 md:grid md:grid-cols-1 gap-4 border-t border-[#D8D8D8]">
                               {product.additionalDetails}
                             </div>
                           )}
@@ -764,38 +727,24 @@ export default function SubmissionPage() {
               </div>
             )}
           </div>
-          
         </div>
       </div>
 
       {/* Button Bar - Full width spanning both sidebar and main content */}
-      <div className="w-full flex justify-end py-4 bg-[#E6EEEF]">
-        <button
+      <div className="w-full flex justify-end py-6 bg-[#E6EEEF]">
+        <Button
           type="button"
           onClick={handleNextStep}
+          iconRight={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.51922 5C9.82089 5 10.1213 5.12211 10.3407 5.36256L15.71 11.2514C16.0967 11.6756 16.0967 12.3244 15.71 12.7486L10.3407 18.6374C9.92722 19.0909 9.22433 19.1234 8.771 18.71C8.31756 18.2964 8.28511 17.5938 8.69845 17.1403L13.3853 12L8.69845 6.85967C8.28511 6.40622 8.31756 5.70356 8.771 5.29C8.984 5.09578 9.25211 5 9.51922 5Z" fill="white"/>
+            </svg>
+          }
           className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69] mr-6"
         >
           Eligibility
-          <svg 
-            width="16" 
-            height="16" 
-            viewBox="0 0 16 16" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="currentColor"/>
-          </svg>
-        </button>
+        </Button>
       </div>
-
-      {/* Address Edit Modal */}
-      <AddressEditModal
-        isOpen={isAddressModalOpen}
-        onClose={closeAddressModal}
-        addressData={addressData}
-        onChange={handleAddressChange}
-        onSubmit={handleAddressSubmit}
-      />
     </div>
   );
 }
