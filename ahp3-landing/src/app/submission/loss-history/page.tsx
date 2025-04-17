@@ -647,7 +647,7 @@ export default function LossHistoryPage() {
               // Use separate input fields for month, day, year with auto-tab
               onInput={(e) => {
                 const target = e.target as HTMLInputElement;
-                let value = target.value;
+                const value = target.value;
                 
                 // Auto-format with slashes
                 if (value.length === 2 && !value.includes('/')) {
