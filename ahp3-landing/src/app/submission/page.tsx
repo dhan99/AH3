@@ -330,19 +330,25 @@ export default function SubmissionPage() {
     if (!contactData) return undefined;
     
     // Create a state object to return to the component
-    // We need to preserve the address and useAddressAbove flag
+    // We need to preserve both the contact info and address info
     const mcContactInfo: MCContactInfo = {
       firstName: contactData.firstName || '',
       lastName: contactData.lastName || '',
       title: '',
       email: contactData.email || '',
       phone: contactData.phone || '',
-      // Use the stored address data if we have it, otherwise use empty strings
-      useAddressAbove: true, // Set to true by default if we have carrier info
-      streetAddress: carrierInfo?.address || '',
-      city: carrierInfo?.city || '',
-      state: carrierInfo?.state || '',
-      zipCode: carrierInfo?.zipCode || ''
+      // Determine whether to check "Same as address above" based on whether
+      // the stored address matches the DOT address
+      useAddressAbove: !!(carrierInfo && 
+        addressData.streetAddress === carrierInfo.address &&
+        addressData.city === carrierInfo.city &&
+        addressData.state === carrierInfo.state &&
+        addressData.zipCode === carrierInfo.zipCode),
+      // Use the address data from the store instead of empty strings
+      streetAddress: addressData.streetAddress || '',
+      city: addressData.city || '',
+      state: addressData.state || '',
+      zipCode: addressData.zipCode || ''
     };
     
     return mcContactInfo;
@@ -362,10 +368,23 @@ export default function SubmissionPage() {
     // If useAddressAbove is checked, copy the carrier address to the contact's address
     if (data.useAddressAbove && carrierInfo) {
       // The component will handle updating its internal state
-      // We don't need to store the address in contactData as it will use carrierInfo's address
+      // Also update the address data in the Zustand store
+      setAddressData({
+        streetAddress: carrierInfo.address,
+        city: carrierInfo.city,
+        state: carrierInfo.state,
+        zipCode: carrierInfo.zipCode,
+        country: 'USA'
+      });
     } else if (!data.useAddressAbove) {
-      // If not using address above, we would store the separate address if needed
-      // But the current store design doesn't have address fields in contactData
+      // If not using address above, store the address data from the form inputs
+      setAddressData({
+        streetAddress: data.streetAddress,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        country: 'USA'
+      });
     }
   };
   
@@ -737,7 +756,7 @@ export default function SubmissionPage() {
           onClick={handleNextStep}
           iconRight={
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.51922 5C9.82089 5 10.1213 5.12211 10.3407 5.36256L15.71 11.2514C16.0967 11.6756 16.0967 12.3244 15.71 12.7486L10.3407 18.6374C9.92722 19.0909 9.22433 19.1234 8.771 18.71C8.31756 18.2964 8.28511 17.5938 8.69845 17.1403L13.3853 12L8.69845 6.85967C8.28511 6.40622 8.31756 5.70356 8.771 5.29C8.984 5.09578 9.25211 5 9.51922 5Z" fill="white"/>
+            <path fillRule="evenodd" clipRule="evenodd" d="M9.51922 5C9.82089 5 10.1213 5.12211 10.3407 5.36256L15.71 11.2514C16.0967 11.6756 16.0967 12.3244 15.71 12.7486L10.3407 18.6374C9.92722 19.0909 9.22433 19.1234 8.771 18.71C8.31756 18.2964 8.28511 17.5938 8.69845 17.1403L13.3853 12L8.69845 6.85967C8.28511 6.40622 8.31756 5.70356 8.771 5.29C8.984 5.09578 9.25211 5 9.51922 5Z" fill="white"/>
             </svg>
           }
           className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69] mr-6"

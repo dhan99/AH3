@@ -72,14 +72,33 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
   // Update contact info when initialData changes (e.g., when accordion reopens)
   useEffect(() => {
     if (initialData && !isFirstRender.current) {
-      setContactInfo(initialData);
+      // Explicitly preserve the current useAddressAbove state to prevent overriding it
+      setContactInfo(prevInfo => {
+        // Only update if the data is actually different to avoid infinite loops
+        const shouldUpdate = 
+          prevInfo.firstName !== initialData.firstName ||
+          prevInfo.lastName !== initialData.lastName ||
+          prevInfo.title !== initialData.title ||
+          prevInfo.email !== initialData.email ||
+          prevInfo.phone !== initialData.phone;
+        
+        if (shouldUpdate) {
+          return {
+            ...initialData,
+            // Keep the current useAddressAbove state rather than using initialData's value
+            useAddressAbove: prevInfo.useAddressAbove
+          };
+        }
+        return prevInfo;
+      });
     }
     isFirstRender.current = false;
   }, [initialData]);
 
   // Handle DOT data copying when checkbox changes - run only when useAddressAbove or dotAddressData changes
   useEffect(() => {
-    // Run this effect only when checkbox is true and DOT data is available
+    // Run this effect only when checkbox is EXPLICITLY checked by user and DOT data is available
+    // This prevents automatic checking when first name or other fields are changed
     if (!contactInfo.useAddressAbove || !dotAddressData) return;
     
     // To prevent infinite loops, only update if address fields don't match DOT data
@@ -266,7 +285,7 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
         onDataChange(updatedInfo);
       }
     } else {
-      // For all other fields, simple update
+      // For all other fields, simple update - ensure we don't affect useAddressAbove state
       setContactInfo(prev => {
         const updated = { 
           ...prev,
