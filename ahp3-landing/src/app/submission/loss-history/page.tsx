@@ -219,6 +219,46 @@ export default function LossHistoryPage() {
       } else if (!/^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/.test(dates.nonTruckingLiability.anniversary)) {
         errors.anniversary = "Please enter a valid date in MM/DD/YYYY format";
       }
+      
+      // Validate policy year fields
+      if (!coveredData.nonTruckingLiability.current) {
+        errors.current = "Current policy year is required";
+      } else if (!/^\d{4}$/.test(coveredData.nonTruckingLiability.current)) {
+        errors.current = "Please enter a valid year in YYYY format";
+      }
+      
+      // Validate prior and 3rd policy years if provided (optional fields)
+      if (coveredData.nonTruckingLiability.prior && 
+          !/^\d{4}$/.test(coveredData.nonTruckingLiability.prior)) {
+        errors.prior = "Please enter a valid year in YYYY format";
+      }
+      
+      if (coveredData.nonTruckingLiability.third && 
+          !/^\d{4}$/.test(coveredData.nonTruckingLiability.third)) {
+        errors.third = "Please enter a valid year in YYYY format";
+      }
+      
+      // Validate 'claims' radio selection
+      if (!nonTruckingLiabilityClaims) {
+        errors.claims = "Please select whether there have been any claims";
+      }
+      
+      // If "Yes" is selected for claims, validate required fields
+      if (nonTruckingLiabilityClaims === 'yes') {
+        // Validate incurred claims (must be a number)
+        if (!claimsData.nonTruckingLiability.incurred) {
+          errors.incurred = "Number of incurred claims is required";
+        } else if (!/^\d+$/.test(claimsData.nonTruckingLiability.incurred)) {
+          errors.incurred = "Please enter a valid number";
+        }
+        
+        // Validate total losses (must be a currency amount)
+        if (!claimsData.nonTruckingLiability.totalLosses) {
+          errors.totalLosses = "Total losses paid is required";
+        } else if (!/^\$?[\d,]+(\.\d{0,2})?$/.test(claimsData.nonTruckingLiability.totalLosses)) {
+          errors.totalLosses = "Please enter a valid currency amount";
+        }
+      }
     }
     
     return { valid: Object.keys(errors).length === 0, errors };
@@ -258,6 +298,46 @@ export default function LossHistoryPage() {
       } else if (!/^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/.test(dates.vehiclePhysicalDamage.anniversary)) {
         errors.anniversary = "Please enter a valid date in MM/DD/YYYY format";
       }
+      
+      // Validate policy year fields
+      if (!coveredData.vehiclePhysicalDamage.current) {
+        errors.current = "Current policy year is required";
+      } else if (!/^\d{4}$/.test(coveredData.vehiclePhysicalDamage.current)) {
+        errors.current = "Please enter a valid year in YYYY format";
+      }
+      
+      // Validate prior and 3rd policy years if provided (optional fields)
+      if (coveredData.vehiclePhysicalDamage.prior && 
+          !/^\d{4}$/.test(coveredData.vehiclePhysicalDamage.prior)) {
+        errors.prior = "Please enter a valid year in YYYY format";
+      }
+      
+      if (coveredData.vehiclePhysicalDamage.third && 
+          !/^\d{4}$/.test(coveredData.vehiclePhysicalDamage.third)) {
+        errors.third = "Please enter a valid year in YYYY format";
+      }
+      
+      // Validate 'claims' radio selection
+      if (!vehiclePhysicalDamageClaims) {
+        errors.claims = "Please select whether there have been any claims";
+      }
+      
+      // If "Yes" is selected for claims, validate required fields
+      if (vehiclePhysicalDamageClaims === 'yes') {
+        // Validate incurred claims (must be a number)
+        if (!claimsData.vehiclePhysicalDamage.incurred) {
+          errors.incurred = "Number of incurred claims is required";
+        } else if (!/^\d+$/.test(claimsData.vehiclePhysicalDamage.incurred)) {
+          errors.incurred = "Please enter a valid number";
+        }
+        
+        // Validate total losses (must be a currency amount)
+        if (!claimsData.vehiclePhysicalDamage.totalLosses) {
+          errors.totalLosses = "Total losses paid is required";
+        } else if (!/^\$?[\d,]+(\.\d{0,2})?$/.test(claimsData.vehiclePhysicalDamage.totalLosses)) {
+          errors.totalLosses = "Please enter a valid currency amount";
+        }
+      }
     }
     
     return { valid: Object.keys(errors).length === 0, errors };
@@ -295,26 +375,35 @@ export default function LossHistoryPage() {
   // Modified to add validation for all sections
   const handleNextStep = () => {
     // First check driver agreements from eligibility page
-    const eligibilityStore = require('@/store/useEligibilityStore').default;
-    const { driverLeaseAgreement, independentContractors } = eligibilityStore.getState();
-    
-    // Validation error messages
-    let validationMessage = '';
-    
-    // Validate that both radio options from eligibility page are selected
-    if (!driverLeaseAgreement || driverLeaseAgreement === 'null') {
-      validationMessage += 'Please select whether drivers sign an independent contractor lease agreement.\n';
-    }
-    
-    if (!independentContractors || independentContractors === 'null') {
-      validationMessage += 'Please select whether independent contractors operate equipment without a vehicle lease agreement.\n';
-    }
-    
-    if (validationMessage) {
-      // Show error message
-      alert("Driver Agreements validation failed:\n" + validationMessage + "\nPlease go back to the Eligibility page and complete the Driver Agreements section.");
-      return;
-    }
+    import('@/store/useEligibilityStore').then(module => {
+      const eligibilityStore = module.default;
+      const { driverLeaseAgreement, independentContractors } = eligibilityStore.getState();
+      
+      // Validation error messages
+      let validationMessage = '';
+      
+      // Validate that both radio options from eligibility page are selected
+      if (!driverLeaseAgreement || driverLeaseAgreement === 'null') {
+        validationMessage += 'Please select whether drivers sign an independent contractor lease agreement.\n';
+      }
+      
+      if (!independentContractors || independentContractors === 'null') {
+        validationMessage += 'Please select whether independent contractors operate equipment without a vehicle lease agreement.\n';
+      }
+      
+      if (validationMessage) {
+        // Show error message
+        alert("Driver Agreements validation failed:\n" + validationMessage + "\nPlease go back to the Eligibility page and complete the Driver Agreements section.");
+        return;
+      }
+      
+      // Continue with the validation and navigation
+      continueValidationAndNavigation();
+    });
+  };
+
+  // Separated the validation and navigation logic to work with dynamic import
+  const continueValidationAndNavigation = () => {
     
     // Validate each section of the Loss History page
     const occupationalAccidentValidation = validateOccupationalAccident();
@@ -632,34 +721,35 @@ export default function LossHistoryPage() {
             placeholder={placeholder || "$0.00"}
             className={`w-full p-2 border rounded ${error ? 'border-[#C60C30] bg-[#FFF8F8]' : 'border-[#D8D8D8]'}`}
             autoComplete="off"
-            onInput={(e) => {
-              const target = e.target as HTMLInputElement;
-              // Allow only digits, commas, periods, and dollar sign
-              let value = target.value.replace(/[^\d$,\.]/g, '');
-              
-              // Ensure only one dollar sign at the beginning
-              if (value.indexOf('$') > 0) {
-                value = value.replace(/\$/g, '');
-                if (value.length > 0) {
-                  value = '$' + value;
+              onInput={(e) => {
+                const target = e.target as HTMLInputElement;
+                // Allow only digits, commas, periods, and dollar sign
+                const value = target.value.replace(/[^\d$,\.]/g, '');
+                let formattedValue = value;
+                
+                // Ensure only one dollar sign at the beginning
+                if (value.indexOf('$') > 0) {
+                  formattedValue = value.replace(/\$/g, '');
+                  if (formattedValue.length > 0) {
+                    formattedValue = '$' + formattedValue;
+                  }
+                } else if (value.split('$').length > 2) {
+                  formattedValue = '$' + value.replace(/\$/g, '');
                 }
-              } else if (value.split('$').length > 2) {
-                value = '$' + value.replace(/\$/g, '');
-              }
-              
-              // Ensure proper decimal format (only one decimal point)
-              const parts = value.replace(/\$/g, '').split('.');
-              if (parts.length > 2) {
-                value = parts[0] + '.' + parts.slice(1).join('');
-              }
-              
-              // Limit to 2 decimal places
-              if (parts.length > 1 && parts[1].length > 2) {
-                value = parts[0] + '.' + parts[1].substring(0, 2);
-              }
-              
-              target.value = value;
-            }}
+                
+                // Ensure proper decimal format (only one decimal point)
+                const parts = formattedValue.replace(/\$/g, '').split('.');
+                if (parts.length > 2) {
+                  formattedValue = parts[0] + '.' + parts.slice(1).join('');
+                }
+                
+                // Limit to 2 decimal places
+                if (parts.length > 1 && parts[1].length > 2) {
+                  formattedValue = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+                
+                target.value = formattedValue;
+              }}
           />
         ) : (
           // Use regular input for other fields
@@ -959,6 +1049,9 @@ export default function LossHistoryPage() {
                             value={coveredData.nonTruckingLiability.current}
                             onChange={(e) => handleNonTruckingLiabilityCoveredDataChange('current', e.target.value)}
                             placeholder="YYYY"
+                            error={validationErrors.nonTruckingLiability.errors.current}
+                            section="nonTruckingLiability"
+                            fieldName="current"
                             isYearField={true}
                           />
                           
@@ -986,6 +1079,7 @@ export default function LossHistoryPage() {
                           value={nonTruckingLiabilityClaims}
                           onChange={setNonTruckingLiabilityClaims}
                           label="Have there been any claims?"
+                          error={validationErrors.nonTruckingLiability.errors.claims}
                           section="nonTruckingLiability"
                         />
                         
@@ -995,6 +1089,9 @@ export default function LossHistoryPage() {
                               label="Number of Incurred Claims?"
                               value={claimsData.nonTruckingLiability.incurred}
                               onChange={(e) => handleNonTruckingLiabilityClaimsDataChange('incurred', e.target.value)}
+                              error={validationErrors.nonTruckingLiability.errors.incurred}
+                              section="nonTruckingLiability"
+                              fieldName="incurred"
                               placeholder="Enter a number"
                               isNumberField={true}
                             />
@@ -1003,6 +1100,9 @@ export default function LossHistoryPage() {
                               label="What are the total losses paid?"
                               value={claimsData.nonTruckingLiability.totalLosses}
                               onChange={(e) => handleNonTruckingLiabilityClaimsDataChange('totalLosses', e.target.value)}
+                              error={validationErrors.nonTruckingLiability.errors.totalLosses}
+                              section="nonTruckingLiability"
+                              fieldName="totalLosses"
                               placeholder="$0.00"
                               isCurrencyField={true}
                             />
@@ -1100,6 +1200,9 @@ export default function LossHistoryPage() {
                             value={coveredData.vehiclePhysicalDamage.current}
                             onChange={(e) => handleVehiclePhysicalDamageCoveredDataChange('current', e.target.value)}
                             placeholder="YYYY"
+                            error={validationErrors.vehiclePhysicalDamage.errors.current}
+                            section="vehiclePhysicalDamage"
+                            fieldName="current"
                             isYearField={true}
                           />
                           
@@ -1127,6 +1230,7 @@ export default function LossHistoryPage() {
                           value={vehiclePhysicalDamageClaims}
                           onChange={setVehiclePhysicalDamageClaims}
                           label="Have there been any claims?"
+                          error={validationErrors.vehiclePhysicalDamage.errors.claims}
                           section="vehiclePhysicalDamage"
                         />
                         
@@ -1136,6 +1240,9 @@ export default function LossHistoryPage() {
                               label="Number of Incurred Claims?"
                               value={claimsData.vehiclePhysicalDamage.incurred}
                               onChange={(e) => handleVehiclePhysicalDamageClaimsDataChange('incurred', e.target.value)}
+                              error={validationErrors.vehiclePhysicalDamage.errors.incurred}
+                              section="vehiclePhysicalDamage"
+                              fieldName="incurred"
                               placeholder="Enter a number"
                               isNumberField={true}
                             />
@@ -1144,6 +1251,9 @@ export default function LossHistoryPage() {
                               label="What are the total losses paid?"
                               value={claimsData.vehiclePhysicalDamage.totalLosses}
                               onChange={(e) => handleVehiclePhysicalDamageClaimsDataChange('totalLosses', e.target.value)}
+                              error={validationErrors.vehiclePhysicalDamage.errors.totalLosses}
+                              section="vehiclePhysicalDamage"
+                              fieldName="totalLosses"
                               placeholder="$0.00"
                               isCurrencyField={true}
                             />
