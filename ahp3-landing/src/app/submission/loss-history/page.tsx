@@ -526,9 +526,14 @@ export default function LossHistoryPage() {
     error?: string;
     section?: 'occupationalAccident' | 'nonTruckingLiability' | 'vehiclePhysicalDamage';
   }) => {
-    // Remove setTimeout validation to prevent focus issues
+    // Trigger validation when radio button selection changes
     const handleChange = (selectedValue: string) => {
       onChange(selectedValue);
+      
+      // Validate the section after radio button change
+      if (section) {
+        validateField(section, name.split('_')[0]);
+      }
     };
     
     return (
@@ -598,13 +603,13 @@ export default function LossHistoryPage() {
     
     const updateValue = () => {
       const input = document.getElementById(id) as HTMLInputElement;
-      if (input && input.value !== value) {
+      if (input) {
         const event = {
           target: input
         } as React.ChangeEvent<HTMLInputElement>;
         onChange(event);
         
-        // Validate the field on blur
+        // Always validate the field on blur, regardless of whether value changed
         if (section && fieldName) {
           validateField(section, fieldName);
         }
@@ -632,8 +637,8 @@ export default function LossHistoryPage() {
           )}
         </label>
         {isDateField ? (
-          // Use a completely different input approach for date fields
-          <div className="date-input-wrapper">
+          // Use a more reliable approach for date fields to avoid React rendering issues
+          <div className="date-input-wrapper relative">
             <input
               id={id}
               type="text" 
@@ -644,16 +649,45 @@ export default function LossHistoryPage() {
               autoComplete="off"
               maxLength={10}
               pattern="\d{2}/\d{2}/\d{4}"
-              // Use separate input fields for month, day, year with auto-tab
-              onInput={(e) => {
+              onChange={(e) => {
+                // Use standard onChange to update the internal state
+                const inputValue = e.target.value;
+                
+                // Schedule the notification to parent outside render cycle
+                setTimeout(() => {
+                  // Update the parent data store outside of render cycle
+                  if (section && fieldName) {
+                    onChange(e);
+                  }
+                }, 0);
+              }}
+              // Handle manual formatting and prevent React errors
+              onKeyPress={(e) => {
                 const target = e.target as HTMLInputElement;
                 const value = target.value;
+                const key = e.key;
+                
+                // Only allow digits and forward slash
+                if (!/[\d\/]/.test(key)) {
+                  e.preventDefault();
+                  return;
+                }
                 
                 // Auto-format with slashes
-                if (value.length === 2 && !value.includes('/')) {
-                  target.value = value + '/';
-                } else if (value.length === 5 && value.indexOf('/', 3) === -1) {
-                  target.value = value + '/';
+                if (value.length === 2 && !value.includes('/') && key !== '/') {
+                  e.preventDefault();
+                  target.value = value + '/' + key;
+                } else if (value.length === 5 && value.indexOf('/', 3) === -1 && key !== '/') {
+                  e.preventDefault();
+                  target.value = value + '/' + key;
+                  
+                  // Trigger update outside of render cycle
+                  setTimeout(() => {
+                    const event = {
+                      target
+                    } as React.ChangeEvent<HTMLInputElement>;
+                    onChange(event);
+                  }, 0);
                 }
               }}
             />
@@ -680,6 +714,18 @@ export default function LossHistoryPage() {
               const target = e.target as HTMLInputElement;
               // Restrict to digits only
               target.value = target.value.replace(/[^\d]/g, '').slice(0, 4);
+              
+              // Validate immediately when 4 digits are entered (complete year)
+              if (target.value.length === 4 && section && fieldName) {
+                // Simulate onChange to update store
+                const event = {
+                  target
+                } as React.ChangeEvent<HTMLInputElement>;
+                onChange(event);
+                
+                // Validate immediately
+                validateField(section, fieldName);
+              }
             }}
           />
         ) : isNumberField ? (
@@ -703,6 +749,18 @@ export default function LossHistoryPage() {
               const target = e.target as HTMLInputElement;
               // Restrict to digits only
               target.value = target.value.replace(/[^\d]/g, '');
+              
+              // Validate immediately when any digit is entered
+              if (target.value.length > 0 && section && fieldName) {
+                // Simulate onChange to update store
+                const event = {
+                  target
+                } as React.ChangeEvent<HTMLInputElement>;
+                onChange(event);
+                
+                // Validate immediately
+                validateField(section, fieldName);
+              }
             }}
           />
         ) : isCurrencyField ? (
@@ -749,6 +807,18 @@ export default function LossHistoryPage() {
                 }
                 
                 target.value = formattedValue;
+                
+                // Validate immediately as value changes
+                if (section && fieldName) {
+                  // Simulate onChange to update store
+                  const event = {
+                    target
+                  } as React.ChangeEvent<HTMLInputElement>;
+                  onChange(event);
+                  
+                  // Validate immediately
+                  validateField(section, fieldName);
+                }
               }}
           />
         ) : (
