@@ -572,20 +572,22 @@ export default function LossHistoryPage() {
         <div className="flex-1 p-8 bg-[#F9F8FB]">
           <h1 className="text-3xl font-bold text-[#333333] mb-6">Eligibility</h1>
           
+          {/* MC Summary Block */}
           <div className="w-full bg-white rounded-lg border border-[#D8D8D8] shadow-md mb-6">
-            <div className="w-full bg-[#F2FBFC] p-4 flex flex-row border-b border-[#D8D8D8] gap-8">
-              <div className="flex flex-col">
+            <div className="w-full bg-[#F2FBFC] p-4 flex flex-row border-b border-[#D8D8D8] justify-center">
+              <div className="flex flex-col flex-1">
                 <h2 className="text-base font-semibold text-[#007B87]">Very Good Trucking Co.</h2>
                 <p className="text-sm text-[#007B87]">DBA: Some Trucking Co. Doing Business As Name</p>
               </div>
-              <div className="flex flex-col">
-                <p className="text-sm text-[#007B87]">450 Rusty Rd<br />Atownin, Alabama 01234</p>
+              <div className="flex flex-col flex-1 items-center">
+                <p className="text-sm text-[#007B87] whitespace-pre-line">450 Rusty Rd<br />Atownin, Alabama 01234</p>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col flex-1 items-end">
                 <p className="text-sm text-[#007B87]">USDOT1523020</p>
               </div>
             </div>
           </div>
+
           
           {/* Loss History Sections */}
           <div className="w-full mb-6">
