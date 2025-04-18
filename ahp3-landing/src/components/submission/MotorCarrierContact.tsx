@@ -48,6 +48,21 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
   // Use a ref to track if this is the first render
   const isFirstRender = useRef(true);
   
+  // Create a ref to keep track of the latest form values
+  // This helps window.validateContactInfo access the most current data
+  const latestFormValuesRef = useRef<ContactInfo>({
+    firstName: '',
+    lastName: '',
+    title: '',
+    email: '',
+    phone: '',
+    useAddressAbove: false,
+    streetAddress: '',
+    city: '',
+    state: '',
+    zipCode: '',
+  });
+  
   // Track phone field focus state and validation
   const [isPhoneFocused, setIsPhoneFocused] = useState(false);
   const [phoneBlurred, setPhoneBlurred] = useState(false);
@@ -86,11 +101,16 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
           prevInfo.phone !== initialData.phone;
         
         if (shouldUpdate) {
-          return {
+          const updated = {
             ...initialData,
             // Keep the current useAddressAbove state rather than using initialData's value
             useAddressAbove: prevInfo.useAddressAbove
           };
+          
+          // Update our ref with the latest values
+          latestFormValuesRef.current = updated;
+          
+          return updated;
         } else {
           if (contactInfo.firstName.trim()) {
             // Clear error if valid
@@ -106,6 +126,11 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
     }
     isFirstRender.current = false;
   }, [initialData]);
+  
+  // Keep our ref in sync with state changes
+  useEffect(() => {
+    latestFormValuesRef.current = contactInfo;
+  }, [contactInfo]);
 
   // Handle DOT data copying ONLY when checkbox is explicitly checked
   useEffect(() => {
@@ -158,32 +183,34 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
   
   // Validate all fields except title
   const validateContactInfo = (): boolean => {
-    const errors: Partial<Record<keyof ContactInfo, string>> = {};
-    console.log("validateContactInfo: contactInfo: ", JSON.stringify(contactInfo));
-    console.log("validateContactInfo: contactInfo.firstName: ", contactInfo.firstName.trim());
+    // Use our ref to get the most up-to-date form values
+    // This ensures we're always validating against the latest data, even when called externally
+    const formValues = latestFormValuesRef.current;
     
-    if (!contactInfo.firstName.trim()) {
+    const errors: Partial<Record<keyof ContactInfo, string>> = {};
+    
+    if (!formValues.firstName.trim()) {
       errors.firstName = "First name is required";
     }
     
-    if (!contactInfo.lastName.trim()) {
+    if (!formValues.lastName.trim()) {
       errors.lastName = "Last name is required";
     }
     
-    if (!contactInfo.email.trim()) {
+    if (!formValues.email.trim()) {
       errors.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(contactInfo.email)) {
+    } else if (!/^\S+@\S+\.\S+$/.test(formValues.email)) {
       errors.email = "Please enter a valid email address";
     }
     
-    if (!contactInfo.phone.trim()) {
+    if (!formValues.phone.trim()) {
       errors.phone = "Phone number is required";
     } else {
       // Simplified phone validation that accepts:
       // 1. 10 digits (e.g., 1234567890)
       // 2. 11 digits starting with 1 (e.g., 11234567890)
       // 3. Common formats with separators: (123) 456-7890, 123-456-7890, 123.456.7890, +1 234 567 8901
-      const strippedPhone = contactInfo.phone.replace(/\D/g, ''); // Remove all non-digits
+      const strippedPhone = formValues.phone.replace(/\D/g, ''); // Remove all non-digits
       const isValidLength = strippedPhone.length === 10 || 
                            (strippedPhone.length === 11 && strippedPhone[0] === '1');
                            
@@ -193,20 +220,20 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
     }
     
     // Skip address validation if useAddressAbove is checked (we know DOT data is valid)
-    if (!contactInfo.useAddressAbove) {
-      if (!contactInfo.streetAddress.trim()) {
+    if (!formValues.useAddressAbove) {
+      if (!formValues.streetAddress.trim()) {
         errors.streetAddress = "Street address is required";
       }
       
-      if (!contactInfo.city.trim()) {
+      if (!formValues.city.trim()) {
         errors.city = "City is required";
       }
       
-      if (!contactInfo.state) {
+      if (!formValues.state) {
         errors.state = "State is required";
       }
       
-      if (!contactInfo.zipCode.trim()) {
+      if (!formValues.zipCode.trim()) {
         errors.zipCode = "Zip code is required";
       }
     }
@@ -220,7 +247,7 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
     
     // If valid, ensure the contact data is provided to the parent
     if (isValid && onDataChange) {
-      onDataChange(contactInfo);
+      onDataChange(formValues);
     }
     
     return isValid;
@@ -304,7 +331,10 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
             zipCode: ''
           };
       
-      // Update our local state first
+      // Update our ref immediately with the new values
+      latestFormValuesRef.current = updatedInfo;
+      
+      // Update our local state 
       setContactInfo(updatedInfo);
       
       // Then notify parent after the state update is complete
@@ -325,21 +355,25 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
       // Important: Do NOT update useAddressAbove here, which prevents side-effects
       const updatedField = { [name]: type === 'checkbox' ? checked : value };
       
-      // Update our local state
-      setContactInfo(prev => ({
-        ...prev,
-        ...updatedField
-      }));
-      
-      // Notify parent in a new animation frame to avoid React update conflicts
-      if (onDataChange) {
-        setTimeout(() => {
-          onDataChange({
-            ...contactInfo,
-            ...updatedField
-          });
-        }, 0);
-      }
+      // Update our local state and then notify parent with the updated value
+      setContactInfo(prev => {
+        const updatedInfo = {
+          ...prev,
+          ...updatedField
+        };
+        
+        // Update our ref immediately with the new values
+        latestFormValuesRef.current = updatedInfo;
+        
+        // Notify parent with the fully updated info
+        if (onDataChange) {
+          setTimeout(() => {
+            onDataChange(updatedInfo);
+          }, 0);
+        }
+        
+        return updatedInfo;
+      });
     }
   };
 
@@ -519,7 +553,8 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
                   
                   // Always notify parent of data change on blur
                   if (onDataChange) {
-                    onDataChange(contactInfo);
+                    // Use the reference to ensure we're always passing the most up-to-date data
+                    onDataChange(latestFormValuesRef.current);
                   }
                 }, 0);
               }}
