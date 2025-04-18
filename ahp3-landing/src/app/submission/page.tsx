@@ -393,6 +393,27 @@ export default function SubmissionPage() {
     setIsMCContactValid(isValid);
   };
 
+  const handleNextStepWithSectionsClose = () => {
+    // First, close all sections to refresh their state
+    const sections = ['motorCarrier', 'motorCarrierContact', 'coverage'];
+    sections.forEach(section => {
+      setOpenSection(section as 'motorCarrier' | 'motorCarrierContact' | 'coverage', false);
+    });
+    
+    // Then reopen them after a short delay for a smooth animation
+    setTimeout(() => {
+      sections.forEach(section => {
+        setOpenSection(section as 'motorCarrier' | 'motorCarrierContact' | 'coverage', true);
+      });
+    }, 300);
+    
+    // Ensure validation happens after sections have reopened with a longer delay
+    setTimeout(() => {
+      handleNextStep();
+    }, 500);
+  };
+  
+  // Separate function for validation logic (moved from handleNextStep)
   const handleNextStep = () => {
     // Set validation triggered flag to show any validation errors
     setContactValidationTriggered(true);
@@ -643,7 +664,11 @@ export default function SubmissionPage() {
             </button>
             
             {openSections.motorCarrierContact && (
-              <div>
+              <motion.div
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
                 {/* Motor Carrier Contact validation error message */}
                 {mcContactError && (
                   <div className="bg-[#FFE6EC] border border-[#C60C30] rounded-md p-4 m-6 mb-0 flex">
@@ -664,8 +689,15 @@ export default function SubmissionPage() {
                   onValidationChange={handleMCContactValidationChange}
                   onDataChange={handleContactDataChange}
                   initialData={convertStoreContactInfoToMC()}
+                  onCheckboxChange={() => {
+                    // Create a smooth animation by closing and reopening the section
+                    setOpenSection('motorCarrierContact', false);
+                    setTimeout(() => {
+                      setOpenSection('motorCarrierContact', true);
+                    }, 300); // Short delay for a smooth animation
+                  }}
                 />
-              </div>
+              </motion.div>
             )}
           </div>
           
@@ -764,6 +796,17 @@ export default function SubmissionPage() {
           Eligibility
         </Button>
       </div>
+      
+      {/* Address Edit Modal */}
+      {isAddressModalOpen && (
+        <AddressEditModal
+          isOpen={isAddressModalOpen}
+          onClose={closeAddressModal}
+          addressData={addressData}
+          onChange={handleAddressChange}
+          onSubmit={handleAddressSubmit}
+        />
+      )}
     </div>
   );
 }

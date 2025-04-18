@@ -11,6 +11,8 @@ interface MotorCarrierContactProps {
   onDataChange?: (data: ContactInfo) => void;
   // Initial data from parent component to restore state when component remounts
   initialData?: ContactInfo;
+  // Optional callback for animating the section when checkbox changes
+  onCheckboxChange?: () => void;
 }
 
 export interface ContactInfo {
@@ -37,7 +39,8 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
   dotAddressData, 
   onValidationChange,
   onDataChange,
-  initialData
+  initialData,
+  onCheckboxChange
 }) => {
   // Create a reference to expose to parent
   const validateRef = useRef<HTMLInputElement>(null);
@@ -88,6 +91,15 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
             // Keep the current useAddressAbove state rather than using initialData's value
             useAddressAbove: prevInfo.useAddressAbove
           };
+        } else {
+          if (contactInfo.firstName.trim()) {
+            // Clear error if valid
+            setValidationErrors(prev => {
+              const newErrors = { ...prev };
+              delete newErrors.firstName;
+              return newErrors;
+            });
+          }
         }
         return prevInfo;
       });
@@ -95,13 +107,12 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
     isFirstRender.current = false;
   }, [initialData]);
 
-  // Handle DOT data copying when checkbox changes - run only when useAddressAbove or dotAddressData changes
+  // Handle DOT data copying ONLY when checkbox is explicitly checked
   useEffect(() => {
-    // Run this effect only when checkbox is EXPLICITLY checked by user and DOT data is available
-    // This prevents automatic checking when first name or other fields are changed
+    // Only run when checkbox is checked AND DOT data is available
     if (!contactInfo.useAddressAbove || !dotAddressData) return;
     
-    // To prevent infinite loops, only update if address fields don't match DOT data
+    // Prevent unnecessary updates if data already matches
     if (
       contactInfo.streetAddress === dotAddressData.streetAddress &&
       contactInfo.city === dotAddressData.city &&
@@ -111,7 +122,7 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
       return; // Skip if data already matches
     }
     
-    // Use functional update pattern to avoid stale closures
+    // Copy the DOT address data to the contact info
     setContactInfo(prev => {
       const updated = {
         ...prev,
@@ -121,14 +132,16 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
         zipCode: dotAddressData.zipCode,
       };
       
-      // Notify parent component
+      // Notify parent component of changes
       if (onDataChange) {
-        onDataChange(updated);
+        setTimeout(() => {
+          onDataChange(updated);
+        }, 0);
       }
       
       return updated;
     });
-  }, [contactInfo.useAddressAbove, dotAddressData, onDataChange]); // Only include the checkbox state and DOT data
+  }, [contactInfo.useAddressAbove, dotAddressData]);
 
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof ContactInfo, string>>>({});
@@ -146,6 +159,8 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
   // Validate all fields except title
   const validateContactInfo = (): boolean => {
     const errors: Partial<Record<keyof ContactInfo, string>> = {};
+    console.log("validateContactInfo: contactInfo: ", JSON.stringify(contactInfo));
+    console.log("validateContactInfo: contactInfo.firstName: ", contactInfo.firstName.trim());
     
     if (!contactInfo.firstName.trim()) {
       errors.firstName = "First name is required";
@@ -177,20 +192,23 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
       }
     }
     
-    if (!contactInfo.streetAddress.trim()) {
-      errors.streetAddress = "Street address is required";
-    }
-    
-    if (!contactInfo.city.trim()) {
-      errors.city = "City is required";
-    }
-    
-    if (!contactInfo.state) {
-      errors.state = "State is required";
-    }
-    
-    if (!contactInfo.zipCode.trim()) {
-      errors.zipCode = "Zip code is required";
+    // Skip address validation if useAddressAbove is checked (we know DOT data is valid)
+    if (!contactInfo.useAddressAbove) {
+      if (!contactInfo.streetAddress.trim()) {
+        errors.streetAddress = "Street address is required";
+      }
+      
+      if (!contactInfo.city.trim()) {
+        errors.city = "City is required";
+      }
+      
+      if (!contactInfo.state) {
+        errors.state = "State is required";
+      }
+      
+      if (!contactInfo.zipCode.trim()) {
+        errors.zipCode = "Zip code is required";
+      }
     }
     
     setValidationErrors(errors);
@@ -218,18 +236,26 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
       const isValidPhone = strippedPhone.length === 10 || 
                           (strippedPhone.length === 11 && strippedPhone[0] === '1');
       
-      // Check if all required fields (except title) are filled and valid
-      const isValid = 
+      // Basic validations that are always checked
+      let isValid = 
         contactInfo.firstName.trim() !== '' &&
         contactInfo.lastName.trim() !== '' &&
         contactInfo.email.trim() !== '' &&
         /^\S+@\S+\.\S+$/.test(contactInfo.email) &&
         contactInfo.phone.trim() !== '' &&
-        isValidPhone &&
-        contactInfo.streetAddress.trim() !== '' &&
-        contactInfo.city.trim() !== '' &&
-        contactInfo.state !== '' &&
-        contactInfo.zipCode.trim() !== '';
+        isValidPhone;
+      
+      // Only check address fields if not using DOT address
+      if (!contactInfo.useAddressAbove) {
+        isValid = isValid &&
+          contactInfo.streetAddress.trim() !== '' &&
+          contactInfo.city.trim() !== '' &&
+          contactInfo.state !== '' &&
+          contactInfo.zipCode.trim() !== '';
+      } else {
+        // When using DOT address, address should always be valid if DOT data is available
+        isValid = isValid && (dotAddressData !== null);
+      }
       
       // Update parent about validation status
       if (onValidationChange) {
@@ -245,13 +271,13 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
     // Defer state updates to avoid React warnings
     const timeoutId = setTimeout(validateFields, 0);
     return () => clearTimeout(timeoutId);
-  }, [contactInfo, onValidationChange, validationErrors]);
+  }, [contactInfo, onValidationChange, validationErrors, dotAddressData]);
 
-  // Input handler for form fields
+  // Improved input handler - ensures the checkbox is only checked/unchecked explicitly
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : false;
-    
+
     // Always clear validation errors for this field on change
     setValidationErrors(prev => {
       const newErrors = { ...prev };
@@ -259,46 +285,61 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
       return newErrors;
     });
     
-    // Special handling for the checkbox that controls address copying
+    // Special handling for checkbox to prevent auto-checking when other fields change
     if (type === 'checkbox' && name === 'useAddressAbove') {
-      // If checking the box, update checkbox state only - useEffect will handle copying
-      // If unchecking, clear the address fields immediately
+      // Only update useAddressAbove when explicitly clicked
       const updatedInfo = checked 
         ? { 
             ...contactInfo, 
             useAddressAbove: true 
+            // Don't update address fields here - let the useEffect handle it
           }
         : {
             ...contactInfo,
             useAddressAbove: false,
+            // Clear address fields when unchecking
             streetAddress: '',
             city: '',
             state: '',
             zipCode: ''
           };
-          
-      // Update state with new values
+      
+      // Update our local state first
       setContactInfo(updatedInfo);
       
-      // Notify parent component
+      // Then notify parent after the state update is complete
       if (onDataChange) {
-        onDataChange(updatedInfo);
+        setTimeout(() => {
+          onDataChange(updatedInfo);
+        }, 0);
+      }
+      
+      // Trigger the section animation if the callback is provided
+      if (onCheckboxChange) {
+        setTimeout(() => {
+          onCheckboxChange();
+        }, 100);
       }
     } else {
-      // For all other fields, simple update - ensure we don't affect useAddressAbove state
-      setContactInfo(prev => {
-        const updated = { 
-          ...prev,
-          [name]: type === 'checkbox' ? checked : value 
-        };
-        
-        // Notify parent component
-        if (onDataChange) {
-          onDataChange(updated);
-        }
-        
-        return updated;
-      });
+      // For all other fields, only update the specific field that changed
+      // Important: Do NOT update useAddressAbove here, which prevents side-effects
+      const updatedField = { [name]: type === 'checkbox' ? checked : value };
+      
+      // Update our local state
+      setContactInfo(prev => ({
+        ...prev,
+        ...updatedField
+      }));
+      
+      // Notify parent in a new animation frame to avoid React update conflicts
+      if (onDataChange) {
+        setTimeout(() => {
+          onDataChange({
+            ...contactInfo,
+            ...updatedField
+          });
+        }, 0);
+      }
     }
   };
 
@@ -337,6 +378,13 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
                     ...prev,
                     firstName: "First name is required"
                   }));
+                } else {
+                  // Clear error if valid
+                  setValidationErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.firstName;
+                    return newErrors;
+                  });
                 }
               }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('firstName')}`}
@@ -362,6 +410,13 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
                     ...prev,
                     lastName: "Last name is required"
                   }));
+                } else {
+                  // Clear error if valid
+                  setValidationErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.lastName;
+                    return newErrors;
+                  });
                 }
               }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('lastName')}`}
@@ -409,6 +464,13 @@ const MotorCarrierContact: React.FC<MotorCarrierContactProps> = ({
                     ...prev,
                     email: "Please enter a valid email address"
                   }));
+                } else {
+                  // Clear error if valid
+                  setValidationErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.email;
+                    return newErrors;
+                  });
                 }
               }}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${getFieldErrorClass('email')}`}
