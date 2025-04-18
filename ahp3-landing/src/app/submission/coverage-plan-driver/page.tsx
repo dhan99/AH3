@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
 import { Header } from '@/components/dashboard';
@@ -9,6 +9,31 @@ import { Breadcrumb, ProgressStepper } from '@/components/submission';
 export default function CoveragePlanDriverPage() {
   const router = useRouter();
   const { isLoading, logout, user: authUser } = useMockAuth();
+  
+  // States for modal visibility
+  const [showAllStatesModal, setShowAllStatesModal] = useState(false);
+  const [currentDriverType, setCurrentDriverType] = useState<'ownerOperator' | 'contractDriver'>('ownerOperator');
+  
+  // List of all US states
+  const allUSStates = [
+    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 
+    'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 
+    'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 
+    'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 
+    'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 
+    'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 
+    'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
+  ];
+
+  // Function to get state options for dropdowns
+  const getStateOptions = () => {
+    return allUSStates.map(state => (
+      <option key={state} value={state}>{state}</option>
+    ));
+  };
+
+  // State for modal data
+  const [allStatesData, setAllStatesData] = useState<Record<string, string>>({});
   
   // State for driver information
   const [ownerOperatorCount, setOwnerOperatorCount] = useState('14');
@@ -26,6 +51,9 @@ export default function CoveragePlanDriverPage() {
     { state: 'Connecticut', drivers: '6' },
     { state: 'Vermont', drivers: '2' }
   ]);
+
+  // Reference for outside click detection
+  const modalRef = useRef<HTMLDivElement>(null);
   
   // State for coverage options
   const [coverageOptions, setCoverageOptions] = useState({
@@ -112,7 +140,7 @@ export default function CoveragePlanDriverPage() {
   };
   
   const handleNextStep = () => {
-    router.push('/submission/coverage-plan');
+    router.push('/submission/coverage-plan-value');
   };
   
   // Define steps for progress sidebar
@@ -266,13 +294,7 @@ export default function CoveragePlanDriverPage() {
                             className="w-full p-3 border border-[#D8D8D8] rounded"
                           >
                             <option value="">Select a state</option>
-                            <option value="Rhode Island">Rhode Island</option>
-                            <option value="Massachusetts">Massachusetts</option>
-                            <option value="Connecticut">Connecticut</option>
-                            <option value="Vermont">Vermont</option>
-                            <option value="New Hampshire">New Hampshire</option>
-                            <option value="Maine">Maine</option>
-                            <option value="New York">New York</option>
+                            {getStateOptions()}
                           </select>
                         </div>
                         
@@ -308,12 +330,22 @@ export default function CoveragePlanDriverPage() {
                       Add Another
                     </button>
                     
-                    <button
-                      type="button"
-                      className="block text-[#007B87] mt-4 hover:underline"
-                    >
-                      See all states at once
-                    </button>
+    <button
+      type="button"
+      className="block text-[#007B87] mt-4 hover:underline"
+      onClick={() => {
+        setCurrentDriverType('ownerOperator');
+        // Pre-populate with existing data
+        const initialData: Record<string, string> = {};
+        ownerOperatorStates.forEach(state => {
+          initialData[state.state] = state.drivers;
+        });
+        setAllStatesData(initialData);
+        setShowAllStatesModal(true);
+      }}
+    >
+      See all states at once
+    </button>
                   </div>
                 </div>
                 
@@ -349,13 +381,7 @@ export default function CoveragePlanDriverPage() {
                             className="w-full p-3 border border-[#D8D8D8] rounded"
                           >
                             <option value="">Select a state</option>
-                            <option value="Rhode Island">Rhode Island</option>
-                            <option value="Massachusetts">Massachusetts</option>
-                            <option value="Connecticut">Connecticut</option>
-                            <option value="Vermont">Vermont</option>
-                            <option value="New Hampshire">New Hampshire</option>
-                            <option value="Maine">Maine</option>
-                            <option value="New York">New York</option>
+                            {getStateOptions()}
                           </select>
                         </div>
                         
@@ -391,12 +417,22 @@ export default function CoveragePlanDriverPage() {
                       Add Another
                     </button>
                     
-                    <button
-                      type="button"
-                      className="block text-[#007B87] mt-4 hover:underline"
-                    >
-                      See all states at once
-                    </button>
+    <button
+      type="button"
+      className="block text-[#007B87] mt-4 hover:underline"
+      onClick={() => {
+        setCurrentDriverType('contractDriver');
+        // Pre-populate with existing data
+        const initialData: Record<string, string> = {};
+        contractDriverStates.forEach(state => {
+          initialData[state.state] = state.drivers;
+        });
+        setAllStatesData(initialData);
+        setShowAllStatesModal(true);
+      }}
+    >
+      See all states at once
+    </button>
                   </div>
                 </div>
               </div>
@@ -582,6 +618,75 @@ export default function CoveragePlanDriverPage() {
         </div>
       </div>
       
+      {/* All States Modal */}
+      {showAllStatesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div 
+            ref={modalRef}
+            className="bg-white rounded-md w-full max-w-4xl max-h-[90vh] overflow-auto relative"
+          >
+            {/* Close button */}
+            <button 
+              className="absolute top-6 right-6 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowAllStatesModal(false)}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 6L18 18M6 18L18 6" stroke="#333333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            
+            {/* Modal content */}
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-[#333333]">Drivers by State</h2>
+                <p className="text-base text-[#333333]">Indicate the number of drivers in each state.</p>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+                {allUSStates.map(state => (
+                  <div key={state} className="mb-4">
+                    <label className="block text-sm font-semibold text-[#333333] mb-1">{state}</label>
+                    <input
+                      type="number"
+                      value={allStatesData[state] || ''}
+                      onChange={(e) => {
+                        setAllStatesData(prev => ({
+                          ...prev,
+                          [state]: e.target.value
+                        }));
+                      }}
+                      className="w-full p-3 border border-[#D8D8D8] rounded"
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  type="button"
+                  className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded hover:bg-[#005F69]"
+                  onClick={() => {
+                    // Convert the data back to state array format
+                    const updatedStates = Object.entries(allStatesData)
+                      .filter(([_, value]) => value !== '')
+                      .map(([state, drivers]) => ({ state, drivers }));
+                    
+                    if (currentDriverType === 'ownerOperator') {
+                      setOwnerOperatorStates(updatedStates);
+                    } else {
+                      setContractDriverStates(updatedStates);
+                    }
+                    setShowAllStatesModal(false);
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Button Bar - Full width spanning both sidebar and main content */}
       <div className="w-full flex justify-between py-4 px-6 bg-[#E6EEEF]">
         <button
@@ -607,7 +712,7 @@ export default function CoveragePlanDriverPage() {
           onClick={handleNextStep}
           className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69]"
         >
-          NTL and VPD
+          Coverage and Plan Design
           <svg 
             width="16" 
             height="16" 

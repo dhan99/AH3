@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
 import { Header } from '@/components/dashboard';
@@ -20,12 +20,19 @@ export default function CoveragePlanValuePage() {
     effectiveDates: true
   });
   
-  const [unitsByState, setUnitsByState] = useState([{ state: '', units: '' }]);
+  const [unitsByState, setUnitsByState] = useState([
+    { state: 'Rhode Island', units: '2' },
+    { state: 'Massachusetts', units: '4' },
+    { state: 'Connecticut', units: '6' },
+    { state: 'Vermont', units: '2' }
+  ]);
   const [vehicleCounts, setVehicleCounts] = useState({
     lessThan10000: '',
     between10000And26000: '',
     moreThan26000: ''
   });
+  const [showAllStates, setShowAllStates] = useState(false);
+  const [stateValues, setStateValues] = useState<Record<string, string>>({});
   const [ntlCombinedSingleLimit, setNtlCombinedSingleLimit] = useState<string | null>(null);
   const [vpdLimit, setVpdLimit] = useState<string | null>(null);
   const [vpdDeductible, setVpdDeductible] = useState<string | null>(null);
@@ -50,6 +57,63 @@ export default function CoveragePlanValuePage() {
     setUnitsByState(updatedStates);
   };
   
+  const removeUnitState = (index: number) => {
+    const updatedStates = [...unitsByState];
+    updatedStates.splice(index, 1);
+    setUnitsByState(updatedStates);
+  };
+  
+  // List of all US states
+  const allStates = [
+    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 
+    'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 
+    'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 
+    'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 
+    'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 
+    'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 
+    'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 
+    'Wisconsin', 'Wyoming'
+  ];
+  
+  // Initialize state values on component mount and when unitsByState changes
+  useEffect(() => {
+    const initialValues: Record<string, string> = {};
+    
+    // Initialize with existing values from unitsByState
+    unitsByState.forEach(item => {
+      if (item.state && item.units) {
+        initialValues[item.state] = item.units;
+      }
+    });
+    
+    // Initialize remaining states with empty values
+    allStates.forEach(state => {
+      if (initialValues[state] === undefined) {
+        initialValues[state] = '';
+      }
+    });
+    
+    setStateValues(initialValues);
+  }, [unitsByState]);
+  
+  // Update state values when a specific state's value changes
+  const handleStateValueChange = (state: string, value: string) => {
+    setStateValues(prev => ({
+      ...prev,
+      [state]: value
+    }));
+  };
+  
+  // Save all state values to the unitsByState
+  const saveStateValues = () => {
+    const updatedUnitsByState = Object.entries(stateValues)
+      .filter(([state, units]) => units !== '')
+      .map(([state, units]) => ({ state, units }));
+    
+    setUnitsByState(updatedUnitsByState);
+    setShowAllStates(false);
+  };
+  
   const calculateTotals = () => {
     const totalUnits = (parseInt(powerUnits.units) || 0) + (parseInt(trailers.units) || 0);
     const powerUnitsTiv = parseFloat(powerUnits.tiv.replace(/[$,]/g, '')) || 0;
@@ -61,7 +125,7 @@ export default function CoveragePlanValuePage() {
   };
   
   const handlePreviousStep = () => router.push('/submission/coverage-plan-driver');
-  const handleNextStep = () => router.push('/submission/coverage-plan-liability');
+  const handleNextStep = () => router.push('/submission/confirm-proposal');
   
   const steps = [
     {
@@ -180,6 +244,233 @@ export default function CoveragePlanValuePage() {
               
               {isOpen && (
                 <div className="p-6 bg-white border border-[#D8D8D8] border-t-0">
+                  {key === 'unitsByState' && (
+                    <div>
+                      <div className="mb-4">
+                        <label className="block text-base font-semibold text-[#333333] mb-4">
+                          Where are the units registered?
+                        </label>
+                        
+                        {unitsByState.map((item, index) => (
+                          <div key={index} className="flex flex-wrap gap-6 mb-6">
+                            <div className="w-full md:w-1/3">
+                              <div className="mb-1">
+                                <label className="block text-sm font-semibold text-[#333333]">
+                                  Number of units<span className="text-[#C60C30]">*</span>
+                                </label>
+                              </div>
+                              <input
+                                type="number"
+                                value={item.units}
+                                onChange={(e) => updateUnitsByState(index, 'units', e.target.value)}
+                                className="w-full p-3 border border-[#D8D8D8] rounded"
+                              />
+                            </div>
+                            <div className="w-full md:w-1/3">
+                              <div className="mb-1">
+                                <label className="block text-sm font-semibold text-[#333333]">
+                                  State<span className="text-[#C60C30]">*</span>
+                                </label>
+                              </div>
+                              <div className="relative">
+                                <select
+                                  value={item.state}
+                                  onChange={(e) => updateUnitsByState(index, 'state', e.target.value)}
+                                  className="w-full p-3 border border-[#D8D8D8] rounded appearance-none pr-10"
+                                >
+                                  <option value="">Select state</option>
+                                  <option value="Alabama">Alabama</option>
+                                  <option value="Alaska">Alaska</option>
+                                  <option value="Arizona">Arizona</option>
+                                  <option value="Arkansas">Arkansas</option>
+                                  <option value="California">California</option>
+                                  <option value="Colorado">Colorado</option>
+                                  <option value="Connecticut">Connecticut</option>
+                                  <option value="Delaware">Delaware</option>
+                                  <option value="Florida">Florida</option>
+                                  <option value="Georgia">Georgia</option>
+                                  <option value="Hawaii">Hawaii</option>
+                                  <option value="Idaho">Idaho</option>
+                                  <option value="Illinois">Illinois</option>
+                                  <option value="Indiana">Indiana</option>
+                                  <option value="Iowa">Iowa</option>
+                                  <option value="Kansas">Kansas</option>
+                                  <option value="Kentucky">Kentucky</option>
+                                  <option value="Louisiana">Louisiana</option>
+                                  <option value="Maine">Maine</option>
+                                  <option value="Maryland">Maryland</option>
+                                  <option value="Massachusetts">Massachusetts</option>
+                                  <option value="Michigan">Michigan</option>
+                                  <option value="Minnesota">Minnesota</option>
+                                  <option value="Mississippi">Mississippi</option>
+                                  <option value="Missouri">Missouri</option>
+                                  <option value="Montana">Montana</option>
+                                  <option value="Nebraska">Nebraska</option>
+                                  <option value="Nevada">Nevada</option>
+                                  <option value="New Hampshire">New Hampshire</option>
+                                  <option value="New Jersey">New Jersey</option>
+                                  <option value="New Mexico">New Mexico</option>
+                                  <option value="New York">New York</option>
+                                  <option value="North Carolina">North Carolina</option>
+                                  <option value="North Dakota">North Dakota</option>
+                                  <option value="Ohio">Ohio</option>
+                                  <option value="Oklahoma">Oklahoma</option>
+                                  <option value="Oregon">Oregon</option>
+                                  <option value="Pennsylvania">Pennsylvania</option>
+                                  <option value="Rhode Island">Rhode Island</option>
+                                  <option value="South Carolina">South Carolina</option>
+                                  <option value="South Dakota">South Dakota</option>
+                                  <option value="Tennessee">Tennessee</option>
+                                  <option value="Texas">Texas</option>
+                                  <option value="Utah">Utah</option>
+                                  <option value="Vermont">Vermont</option>
+                                  <option value="Virginia">Virginia</option>
+                                  <option value="Washington">Washington</option>
+                                  <option value="West Virginia">West Virginia</option>
+                                  <option value="Wisconsin">Wisconsin</option>
+                                  <option value="Wyoming">Wyoming</option>
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                  <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-end">
+                              <button
+                                onClick={() => removeUnitState(index)}
+                                className="text-[#007B87] font-semibold p-3"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        <button
+                          onClick={addUnitState}
+                          className="flex items-center gap-2 text-[#007B87] font-semibold border-2 border-[#007B87] px-4 py-2 rounded mt-4"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 1V11M1 6H11" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Add Another
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center text-[#007B87] mt-6 cursor-pointer" onClick={() => setShowAllStates(true)}>
+                        <span className="text-base">See all states at once</span>
+                      </div>
+                      
+                      {/* Modal for all states */}
+                      {showAllStates && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                          <div className="bg-white rounded-md p-6 w-[90%] max-w-3xl h-[80vh] flex flex-col relative">
+                            {/* Close button */}
+                            <button 
+                              className="absolute top-6 right-6 text-[#333333]" 
+                              onClick={() => setShowAllStates(false)}
+                            >
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="#333333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                            
+                            {/* Header */}
+                            <div className="text-center mb-6">
+                              <h2 className="text-xl font-semibold text-[#333333]">Units by State</h2>
+                              <p className="text-base text-[#333333]">Indicate the number of units in each state.</p>
+                            </div>
+                            
+                            {/* Scrollable content */}
+                            <div className="overflow-y-auto flex-grow">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {allStates.map(state => (
+                                  <div key={state} className="mb-4">
+                                    <label className="block text-base font-semibold text-[#333333] mb-1">
+                                      {state}
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={stateValues[state] || ''}
+                                      onChange={(e) => handleStateValueChange(state, e.target.value)}
+                                      className="w-full p-3 border border-[#D8D8D8] rounded"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            {/* Footer with Save button */}
+                            <div className="mt-6 flex justify-center">
+                              <button
+                                onClick={saveStateValues}
+                                className="bg-[#007B87] text-white py-2 px-8 rounded font-semibold"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {key === 'vehicles' && (
+                    <div>
+                      <div className="mb-4">
+                        <label className="block text-base font-semibold text-[#333333] mb-4">
+                          Number of Trucks by Weight
+                        </label>
+                        
+                        <div className="flex flex-row flex-wrap gap-6">
+                          <div className="w-full md:w-1/3">
+                            <div className="mb-1">
+                              <label className="block text-sm font-semibold text-[#333333]">
+                                Less than 10,000lbs
+                              </label>
+                            </div>
+                            <input
+                              type="number"
+                              value={vehicleCounts.lessThan10000}
+                              onChange={(e) => setVehicleCounts({...vehicleCounts, lessThan10000: e.target.value})}
+                              className="w-full p-3 border border-[#D8D8D8] rounded"
+                            />
+                          </div>
+                          
+                          <div className="w-full md:w-1/3">
+                            <div className="mb-1">
+                              <label className="block text-sm font-semibold text-[#333333]">
+                                10,000-26,000 lbs
+                              </label>
+                            </div>
+                            <input
+                              type="number"
+                              value={vehicleCounts.between10000And26000}
+                              onChange={(e) => setVehicleCounts({...vehicleCounts, between10000And26000: e.target.value})}
+                              className="w-full p-3 border border-[#D8D8D8] rounded"
+                            />
+                          </div>
+                          
+                          <div className="w-full md:w-1/3">
+                            <div className="mb-1">
+                              <label className="block text-sm font-semibold text-[#333333]">
+                                More than 26,000 lbs
+                              </label>
+                            </div>
+                            <input
+                              type="number"
+                              value={vehicleCounts.moreThan26000}
+                              onChange={(e) => setVehicleCounts({...vehicleCounts, moreThan26000: e.target.value})}
+                              className="w-full p-3 border border-[#D8D8D8] rounded"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   {key === 'ntlCoverageOptions' && (
                     <div>
                       <label className="block text-base font-semibold text-[#333333] mb-4">
@@ -262,68 +553,114 @@ export default function CoveragePlanValuePage() {
                   
                   {key === 'tivForVpd' && (
                     <div>
-                      <div className="mb-4">
+                      <p className="text-base text-[#333333] mb-6">
+                        Please provide the current Total Insured Value (TIV) for your vehicles.
+                      </p>
+                      
+                      <div className="mb-8">
                         <div className="bg-[#F2FBFC] p-3 mb-4">
                           <h4 className="font-semibold text-[#333333]">Power Units</h4>
                         </div>
-                        <div className="flex flex-wrap items-end gap-6">
-                          <div className="w-full md:w-1/4">
-                            <label className="block text-sm font-semibold text-[#333333] mb-1">Number of Units</label>
+                        <div className="flex flex-wrap gap-6 mb-2">
+                          <div className="w-full md:w-1/3">
+                            <div className="mb-1">
+                              <label className="block text-sm font-semibold text-[#333333]">
+                                Number of Units<span className="text-[#C60C30]">*</span>
+                              </label>
+                            </div>
                             <input
                               type="number"
                               value={powerUnits.units}
                               onChange={(e) => setPowerUnits({...powerUnits, units: e.target.value})}
                               className="w-full p-3 border border-[#D8D8D8] rounded"
+                              placeholder="0"
                             />
                           </div>
-                          <div className="w-full md:w-1/4">
-                            <label className="block text-sm font-semibold text-[#333333] mb-1">TIV</label>
-                            <input
-                              type="text"
-                              value={powerUnits.tiv}
-                              onChange={(e) => setPowerUnits({...powerUnits, tiv: e.target.value})}
-                              className="w-full p-3 border border-[#D8D8D8] rounded"
-                            />
+                          <div className="w-full md:w-1/3">
+                            <div className="mb-1">
+                              <label className="block text-sm font-semibold text-[#333333]">
+                                TIV<span className="text-[#C60C30]">*</span>
+                              </label>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={powerUnits.tiv}
+                                onChange={(e) => {
+                                  // Format as currency if needed
+                                  const value = e.target.value.replace(/[^0-9.]/g, '');
+                                  setPowerUnits({...powerUnits, tiv: value ? `$${value}` : '$0.00'});
+                                }}
+                                className="w-full p-3 border border-[#D8D8D8] rounded pl-8"
+                                placeholder="$0.00"
+                              />
+                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#333333]">
+                                {powerUnits.tiv === '$0.00' ? '$' : ''}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <p className="text-xs text-[#666666] italic">
+                          Enter the number of power unit vehicles and their combined total value
+                        </p>
                       </div>
                       
-                      <div className="mb-4">
+                      <div className="mb-8">
                         <div className="bg-[#F2FBFC] p-3 mb-4">
                           <h4 className="font-semibold text-[#333333]">Trailers</h4>
                         </div>
-                        <div className="flex flex-wrap items-end gap-6">
-                          <div className="w-full md:w-1/4">
-                            <label className="block text-sm font-semibold text-[#333333] mb-1">Number of Units</label>
+                        <div className="flex flex-wrap gap-6 mb-2">
+                          <div className="w-full md:w-1/3">
+                            <div className="mb-1">
+                              <label className="block text-sm font-semibold text-[#333333]">
+                                Number of Units<span className="text-[#C60C30]">*</span>
+                              </label>
+                            </div>
                             <input
                               type="number"
                               value={trailers.units}
                               onChange={(e) => setTrailers({...trailers, units: e.target.value})}
                               className="w-full p-3 border border-[#D8D8D8] rounded"
+                              placeholder="0"
                             />
                           </div>
-                          <div className="w-full md:w-1/4">
-                            <label className="block text-sm font-semibold text-[#333333] mb-1">TIV</label>
-                            <input
-                              type="text"
-                              value={trailers.tiv}
-                              onChange={(e) => setTrailers({...trailers, tiv: e.target.value})}
-                              className="w-full p-3 border border-[#D8D8D8] rounded"
-                            />
+                          <div className="w-full md:w-1/3">
+                            <div className="mb-1">
+                              <label className="block text-sm font-semibold text-[#333333]">
+                                TIV<span className="text-[#C60C30]">*</span>
+                              </label>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={trailers.tiv}
+                                onChange={(e) => {
+                                  // Format as currency if needed
+                                  const value = e.target.value.replace(/[^0-9.]/g, '');
+                                  setTrailers({...trailers, tiv: value ? `$${value}` : '$0.00'});
+                                }}
+                                className="w-full p-3 border border-[#D8D8D8] rounded pl-8"
+                                placeholder="$0.00"
+                              />
+                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#333333]">
+                                {trailers.tiv === '$0.00' ? '$' : ''}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <p className="text-xs text-[#666666] italic">
+                          Enter the number of trailers and their combined total value
+                        </p>
                       </div>
                       
-                      <hr className="my-4 border-[#D8D8D8]" />
-                      
-                      <div className="bg-[#E6EEEF] p-4 rounded">
-                        <div className="flex flex-col items-center mb-2">
-                          <span className="text-base text-[#333333]">Total power units and trailers</span>
-                          <span className="font-semibold text-lg text-[#333333]">{totalUnits}</span>
+                      <div className="bg-[#E6EEEF] p-6 rounded flex flex-row justify-around">
+                        <div className="flex flex-col items-center">
+                          <span className="text-base text-[#666666] mb-1">Total units</span>
+                          <span className="font-semibold text-xl text-[#333333]">{totalUnits}</span>
                         </div>
                         <div className="flex flex-col items-center">
-                          <span className="text-base text-[#333333]">Total insured value</span>
-                          <span className="font-semibold text-lg text-[#333333]">{totalTiv}</span>
+                          <span className="text-base text-[#666666] mb-1">Total insured value</span>
+                          <span className="font-semibold text-xl text-[#333333]">{totalTiv}</span>
                         </div>
                       </div>
                     </div>
@@ -331,22 +668,22 @@ export default function CoveragePlanValuePage() {
                   
                   {key === 'effectiveDates' && (
                     <div>
-                      <div className="flex items-center mb-4">
+                      <div className="flex items-center mb-6">
                         <input
                           type="checkbox"
                           id="sameEffectiveDate"
                           checked={sameEffectiveDateForAll}
                           onChange={(e) => setSameEffectiveDateForAll(e.target.checked)}
-                          className="mr-2 h-4 w-4 accent-[#007B87]"
+                          className="mr-2 h-5 w-5 rounded border-[#D8D8D8] accent-[#007B87]"
                         />
                         <label htmlFor="sameEffectiveDate" className="text-base text-[#333333]">
                           Same effective date for all
                         </label>
                       </div>
                       
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         {Object.entries(effectiveDates).map(([type, date]) => (
-                          <div key={type}>
+                          <div key={type} className="w-full md:w-2/5">
                             <label className="block text-base font-semibold text-[#333333] mb-2">
                               {type === 'occupationalAccident' && 'Occupational Accident requested effective date'}
                               {type === 'nonTruckingLiability' && 'Non-Trucking Liability requested effective date'}
@@ -354,31 +691,40 @@ export default function CoveragePlanValuePage() {
                             </label>
                             <div className="relative">
                               <input
-                                type="text"
+                                type="date"
                                 placeholder="mm/dd/yyyy"
-                                value={date}
+                                value={date === 'mm/dd/yyyy' ? '' : date}
                                 onChange={(e) => {
+                                  const newValue = e.target.value || 'mm/dd/yyyy';
                                   if (sameEffectiveDateForAll) {
+                                    // Apply the same date to all fields when checkbox is checked
                                     setEffectiveDates({
-                                      occupationalAccident: e.target.value,
-                                      nonTruckingLiability: e.target.value,
-                                      vehiclePhysicalDamage: e.target.value
+                                      occupationalAccident: newValue,
+                                      nonTruckingLiability: newValue,
+                                      vehiclePhysicalDamage: newValue
                                     });
                                   } else {
+                                    // Update only the current field when checkbox is unchecked
                                     setEffectiveDates({
                                       ...effectiveDates,
-                                      [type]: e.target.value
+                                      [type]: newValue
                                     });
                                   }
                                 }}
-                                className="w-full lg:w-1/3 p-3 border border-[#D8D8D8] rounded pr-10"
+                                className="w-full p-3 border border-[#D8D8D8] rounded pr-10"
                               />
-                              <svg 
+                              <button 
                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#007B87]"
-                                width="20" height="20" viewBox="0 0 20 20" fill="none"
+                                tabIndex={-1}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  // This would trigger the date picker in a real implementation
+                                  const input = e.currentTarget.previousSibling as HTMLElement;
+                                  if (input) input.click();
+                                }}
                               >
-                                <path d="M15 2H17C17.5304 2 18.0391 2.21071 18.4142 2.58579C18.7893 2.96086 19 3.46957 19 4V18C19 18.5304 18.7893 19.0391 18.4142 19.4142C18.0391 19.7893 17.5304 20 17 20H3C2.46957 20 1.96086 19.7893 1.58579 19.4142C1.21071 19.0391 1 18.5304 1 18V4C1 3.46957 1.21071 2.96086 1.58579 2.58579C1.96086 2.21071 2.46957 2 3 2H5" stroke="#007B87" strokeWidth="2"/>
-                              </svg>
+                                
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -394,7 +740,7 @@ export default function CoveragePlanValuePage() {
           <div className="bg-[#E6EEEF] py-4 px-6 flex justify-between items-center">
             <button
               onClick={handlePreviousStep}
-              className="flex items-center gap-2 border-2 border-[#007B87] text-[#007B87] px-4 py-2 rounded"
+              className="flex items-center gap-2 border-2 border-[#007B87] text-[#007B87] px-4 py-2 rounded font-semibold"
             >
               <svg className="transform rotate-180" width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M5 12H19" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -403,16 +749,18 @@ export default function CoveragePlanValuePage() {
               Plan Coverage and Design
             </button>
             
-            <button
-              onClick={handleNextStep}
-              className="flex items-center gap-2 bg-[#007B87] text-white px-4 py-2 rounded"
-            >
-              Coverage and Liability
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 5L19 12L12 19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
+            <div className="flex items-center gap-8">
+              <button
+                onClick={handleNextStep}
+                className="flex items-center gap-2 bg-[#007B87] text-white px-6 py-2 rounded font-semibold"
+              >
+                Summary
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 5L19 12L12 19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>

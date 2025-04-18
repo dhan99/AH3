@@ -79,7 +79,7 @@ export default function CoveragePlanPage() {
   
   const handleNextStep = () => {
     // Add validation here if needed
-    router.push('/submission/proposal');
+    router.push('/submission/confirm-proposal');
   };
   
   // Define steps for progress sidebar
@@ -471,7 +471,7 @@ export default function CoveragePlanPage() {
           onClick={handleNextStep}
           className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69]"
         >
-          Proposal
+          Confirm and Create Proposal
           <svg 
             width="16" 
             height="16" 

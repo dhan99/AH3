@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
 import { Header } from '@/components/dashboard';
 import { Breadcrumb, ProgressStepper } from '@/components/submission';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 // Main component
 export default function LossHistoryPage() {
@@ -50,6 +52,35 @@ export default function LossHistoryPage() {
   // Navigation handlers
   const handlePreviousStep = () => router.push('/submission/eligibility');
   const handleNextStep = () => router.push('/submission/coverage-plan-driver');
+  
+  // Helper function to parse date strings
+  const parseDate = (dateString: string) => {
+    if (!dateString) return null;
+    
+    // Parse MM/DD/YYYY format
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      const month = parseInt(parts[0], 10) - 1; // months are 0-indexed in JS Date
+      const day = parseInt(parts[1], 10);
+      const year = parseInt(parts[2], 10);
+      if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+        return new Date(year, month, day);
+      }
+    }
+    
+    return null;
+  };
+  
+  // Helper function to format dates
+  const formatDate = (date: Date | null) => {
+    if (!date) return '';
+    
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${month}/${day}/${year}`;
+  };
   
   // Progress steps for sidebar
   const steps = [
@@ -143,32 +174,69 @@ export default function LossHistoryPage() {
       </div>
     );
   };
-
+  
+  // Date input with date picker
   const DateInput = ({
+    id,
     label,
     value,
     onChange,
-    placeholder = "MM/DD/YYYY",
     error
   }: {
+    id: string;
     label: string;
     value: string;
     onChange: (value: string) => void;
-    placeholder?: string;
     error?: string;
   }) => {
+    // Create an uncontrolled component that maintains focus while typing
+    const UncontrolledDateInput = () => {
+      const [localDate, setLocalDate] = React.useState<Date | null>(parseDate(value));
+      
+      // Update local state without triggering parent updates during typing
+      const handleDateChange = (date: Date | null) => {
+        setLocalDate(date);
+      };
+      
+      // Only update parent state on close/blur to prevent focus loss
+      const handleCalendarClose = () => {
+        onChange(formatDate(localDate));
+      };
+      
+      // Sync with parent value when it changes externally
+      React.useEffect(() => {
+        const parsedDate = parseDate(value);
+        if (parsedDate && (!localDate || parsedDate.getTime() !== localDate.getTime())) {
+          setLocalDate(parsedDate);
+        }
+      }, [value]);
+      
+      return (
+        <DatePicker
+          id={id}
+          selected={localDate}
+          onChange={handleDateChange}
+          onCalendarClose={handleCalendarClose}
+          onBlur={() => onChange(formatDate(localDate))}
+          dateFormat="MM/dd/yyyy"
+          placeholderText="MM/DD/YYYY"
+          className={`w-full px-4 py-3 border ${error ? 'border-[#C60C30]' : 'border-[#D8D8D8]'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]`}
+          showPopperArrow={false}
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+          popperClassName="react-datepicker-popper"
+          popperPlacement="bottom-start"
+        />
+      );
+    };
+    
     return (
       <div className="flex-1 min-w-[230px]">
-        <label className="block text-base font-semibold text-[#333333] mb-1">
+        <label htmlFor={id} className="block text-base font-semibold text-[#333333] mb-1">
           {label}
         </label>
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className={`w-full px-4 py-3 border ${error ? 'border-[#C60C30]' : 'border-[#D8D8D8]'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]`}
-        />
+        <UncontrolledDateInput />
         {error && (
           <p className="text-[#C60C30] text-sm mt-1">{error}</p>
         )}
@@ -176,35 +244,305 @@ export default function LossHistoryPage() {
     );
   };
 
+  // Helper function to parse year strings
+  const parseYear = (yearString: string) => {
+    if (!yearString) return null;
+    
+    const year = parseInt(yearString, 10);
+    if (!isNaN(year)) {
+      const date = new Date();
+      date.setFullYear(year);
+      return date;
+    }
+    
+    return null;
+  };
+  
+  // Helper function to format years
+  const formatYear = (date: Date | null) => {
+    if (!date) return '';
+    return date.getFullYear().toString();
+  };
+  
+  // Year input component with year picker widget
   const YearInput = ({
+    id,
     label,
     value,
     onChange,
     placeholder = "YYYY",
     error
   }: {
+    id: string;
     label: string;
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
     error?: string;
   }) => {
+    // Get current year for range calculation
+    const currentYear = new Date().getFullYear();
+    
+    // Create an uncontrolled component that maintains focus while typing
+    const UncontrolledYearInput = () => {
+      const [localYear, setLocalYear] = React.useState<Date | null>(parseYear(value));
+      
+      // Update local state without triggering parent updates during typing
+      const handleYearChange = (date: Date | null) => {
+        setLocalYear(date);
+      };
+      
+      // Only update parent state on close/blur to prevent focus loss
+      const handleCalendarClose = () => {
+        onChange(formatYear(localYear));
+      };
+      
+      // Sync with parent value when it changes externally
+      React.useEffect(() => {
+        const parsedYear = parseYear(value);
+        if (parsedYear && (!localYear || parsedYear.getFullYear() !== localYear.getFullYear())) {
+          setLocalYear(parsedYear);
+        }
+      }, [value]);
+      
+      return (
+        <DatePicker
+          id={id}
+          selected={localYear}
+          onChange={handleYearChange}
+          onCalendarClose={handleCalendarClose}
+          onBlur={() => onChange(formatYear(localYear))}
+          showYearPicker
+          dateFormat="yyyy"
+          yearItemNumber={12}
+          placeholderText={placeholder}
+          className={`w-full px-4 py-3 border ${error ? 'border-[#C60C30]' : 'border-[#D8D8D8]'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]`}
+          minDate={new Date(currentYear - 20, 0, 1)}
+          maxDate={new Date(currentYear + 1, 11, 31)}
+          showPopperArrow={false}
+          popperClassName="react-datepicker-popper"
+          popperPlacement="bottom-start"
+        />
+      );
+    };
+    
     return (
       <div className="flex-1 min-w-[150px]">
-        <label className="block text-base font-semibold text-[#333333] mb-1">
+        <label htmlFor={id} className="block text-base font-semibold text-[#333333] mb-1">
+          {label}
+        </label>
+        <UncontrolledYearInput />
+        {error && (
+          <p className="text-[#C60C30] text-sm mt-1">{error}</p>
+        )}
+      </div>
+    );
+  };
+  
+  // Claims input field with input validation - using native number inputs to maintain focus
+  const ClaimsInput = ({ 
+    id,
+    label, 
+    value, 
+    onChange, 
+    placeholder, 
+    className = "w-full px-4 py-3 border border-[#D8D8D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]",
+    type = "text"
+  }: {
+    id: string;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+    className?: string;
+    type?: "number" | "currency" | "text";
+  }) => {
+    // For numeric fields, use an uncontrolled component approach similar to currency
+    if (type === "number") {
+      // Create a separate component that doesn't use React's value prop
+      const UncontrolledNumberInput = () => {
+        // Get the input ref to set the value manually
+        const inputRef = React.useRef<HTMLInputElement>(null);
+        
+        // Set initial value on mount and add input validation
+        React.useEffect(() => {
+          if (inputRef.current) {
+            // Set initial value
+            inputRef.current.value = value;
+            
+            // Add input event listener for real-time validation without losing focus
+            const input = inputRef.current;
+            const validateInput = (e: Event) => {
+              const target = e.target as HTMLInputElement;
+              const cursorPosition = target.selectionStart;
+              
+              // Only allow numeric digits
+              const sanitized = target.value.replace(/[^\d]/g, '');
+              
+              // Only update if changed to avoid focus issues
+              if (sanitized !== target.value) {
+                target.value = sanitized;
+                // Try to maintain cursor position
+                setTimeout(() => {
+                  const newPosition = Math.min(cursorPosition || 0, sanitized.length);
+                  target.setSelectionRange(newPosition, newPosition);
+                }, 0);
+              }
+            };
+            
+            input.addEventListener('input', validateInput);
+            
+            // Clean up
+            return () => {
+              input.removeEventListener('input', validateInput);
+            };
+          }
+        }, []);
+        
+        // Update parent state on blur
+        const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+          onChange(e.target.value);
+        };
+        
+        return (
+          <input
+            ref={inputRef}
+            id={id}
+            type="text"
+            defaultValue={value}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            className={className}
+            inputMode="numeric"
+          />
+        );
+      };
+      
+      return (
+        <div className="flex-1 min-w-[230px]">
+          <label htmlFor={id} className="block text-base font-semibold text-[#333333] mb-1">
+            {label}
+          </label>
+          <UncontrolledNumberInput />
+        </div>
+      );
+    }
+    
+    // For currency fields, use a completely uncontrolled component approach
+    if (type === "currency") {
+      // Create a separate component that doesn't use React's value prop
+      const UncontrolledCurrencyInput = () => {
+        // Get the input ref to set the value manually
+        const inputRef = React.useRef<HTMLInputElement>(null);
+        
+        // Set initial value on mount and add input validation
+        React.useEffect(() => {
+          if (inputRef.current) {
+            // Strip $ when setting initial value
+            inputRef.current.value = value.replace(/^\$/, '');
+            
+            // Add input event listener for real-time validation without losing focus
+            const input = inputRef.current;
+            const validateInput = (e: Event) => {
+              const target = e.target as HTMLInputElement;
+              const cursorPosition = target.selectionStart;
+              
+              // Validate for currency format (numbers, single decimal point)
+              // Replace any invalid characters
+              const sanitized = target.value.replace(/[^\d.]/g, '');
+              
+              // Ensure only one decimal point
+              const parts = sanitized.split('.');
+              let formatted = parts[0];
+              if (parts.length > 1) {
+                // Keep only up to 2 decimal places
+                formatted += '.' + parts.slice(1).join('').substring(0, 2);
+              }
+              
+              // Only update if changed to avoid focus issues
+              if (formatted !== target.value) {
+                target.value = formatted;
+                // Try to maintain cursor position
+                setTimeout(() => {
+                  const newPosition = Math.min(cursorPosition || 0, formatted.length);
+                  target.setSelectionRange(newPosition, newPosition);
+                }, 0);
+              }
+            };
+            
+            input.addEventListener('input', validateInput);
+            
+            // Clean up
+            return () => {
+              input.removeEventListener('input', validateInput);
+            };
+          }
+        }, []);
+        
+        // Format number with commas for display when blurring
+        const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+          if (!e.target.value) {
+            onChange('$0.00');
+            return;
+          }
+          
+          // Format with commas and always two decimal places
+          let value = e.target.value;
+          
+          // Ensure there's a decimal point with exactly two places
+          if (!value.includes('.')) {
+            value += '.00';
+          } else {
+            const parts = value.split('.');
+            // Pad with zeros if needed
+            value = parts[0] + '.' + (parts[1] + '00').substring(0, 2);
+          }
+          
+          // Add dollar sign for storage
+          onChange('$' + value);
+        };
+        
+        return (
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-gray-500">$</span>
+            <input
+              ref={inputRef}
+              id={id}
+              type="text"
+              defaultValue={value.replace(/^\$/, '')}
+              onBlur={handleBlur}
+              placeholder={placeholder ? placeholder.replace('$', '') : '0.00'}
+              className={`${className} pl-7`}
+              inputMode="decimal"
+            />
+          </div>
+        );
+      };
+      
+      return (
+        <div className="flex-1 min-w-[230px]">
+          <label htmlFor={id} className="block text-base font-semibold text-[#333333] mb-1">
+            {label}
+          </label>
+          <UncontrolledCurrencyInput />
+        </div>
+      );
+    }
+    
+    // For regular text
+    return (
+      <div className="flex-1 min-w-[230px]">
+        <label htmlFor={id} className="block text-base font-semibold text-[#333333] mb-1">
           {label}
         </label>
         <input
+          id={id}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          maxLength={4}
-          className={`w-full px-4 py-3 border ${error ? 'border-[#C60C30]' : 'border-[#D8D8D8]'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]`}
+          className={className}
         />
-        {error && (
-          <p className="text-[#C60C30] text-sm mt-1">{error}</p>
-        )}
       </div>
     );
   };
@@ -223,24 +561,17 @@ export default function LossHistoryPage() {
 
   return (
     <div className="min-h-screen bg-[#F9F8FB]">
-      {/* Header/Navbar */}
       <Header user={authUser || {}} onLogout={logout} />
-      
-      {/* Breadcrumbs */}
       <Breadcrumb items={breadcrumbItems} />
       
-      {/* Main Content */}
       <div className="flex flex-row">
-        {/* Left Sidebar - Progress Stepper */}
         <div className="min-w-[260px] shadow-sm bg-white">
           <ProgressStepper steps={steps} />
         </div>
         
-        {/* Main Content */}
         <div className="flex-1 p-8 bg-[#F9F8FB]">
           <h1 className="text-3xl font-bold text-[#333333] mb-6">Eligibility</h1>
           
-          {/* MC Summary Block */}
           <div className="w-full bg-white rounded-lg border border-[#D8D8D8] shadow-md mb-6">
             <div className="w-full bg-[#F2FBFC] p-4 flex flex-row border-b border-[#D8D8D8] gap-8">
               <div className="flex flex-col">
@@ -256,39 +587,20 @@ export default function LossHistoryPage() {
             </div>
           </div>
           
-          {/* Loss History Section */}
+          {/* Loss History Sections */}
           <div className="w-full mb-6">
-            <button 
-              className="flex justify-between items-center p-4 bg-[#F9F8FB] border-b border-[#E6EEEF] w-full"
-            >
+            <button className="flex justify-between items-center p-4 bg-[#F9F8FB] border-b border-[#E6EEEF] w-full">
               <h2 className="text-2xl font-semibold text-[#333333]">Loss History</h2>
-              <svg 
-                width="24" 
-                height="24" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
-                className="transform transition-transform rotate-180"
-              >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="transform transition-transform rotate-180">
                 <path d="M6 9L12 15L18 9" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
             
             {/* Occupational Accident Section */}
             <div className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
-              <button 
-                className="flex justify-between items-center p-4 w-full"
-                onClick={() => toggleSection('occupationalAccident')}
-              >
+              <button className="flex justify-between items-center p-4 w-full" onClick={() => toggleSection('occupationalAccident')}>
                 <h3 className="text-lg font-semibold text-[#333333]">Occupational Accident</h3>
-                <svg 
-                  width="24" 
-                  height="24" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={`transform transition-transform ${openSections.occupationalAccident ? 'rotate-180' : ''}`}
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`transform transition-transform ${openSections.occupationalAccident ? 'rotate-180' : ''}`}>
                   <path d="M6 9L12 15L18 9" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
@@ -307,12 +619,14 @@ export default function LossHistoryPage() {
                     <div className="mt-4">
                       <div className="flex flex-wrap gap-4 mb-4">
                         <DateInput
+                          id="oa-loss-run-date"
                           label="Loss run evaluation date"
                           value={dates.occupationalAccident.lossRunEvaluation}
                           onChange={(value) => updateOccupationalAccidentDate('lossRunEvaluation', value)}
                         />
                         
                         <DateInput
+                          id="oa-anniversary-date"
                           label="Anniversary date"
                           value={dates.occupationalAccident.anniversary}
                           onChange={(value) => updateOccupationalAccidentDate('anniversary', value)}
@@ -326,21 +640,27 @@ export default function LossHistoryPage() {
                         
                         <div className="flex flex-wrap gap-4 mb-4">
                           <YearInput
+                            id="oa-current-year"
                             label="Current policy year"
                             value={coveredData.occupationalAccident.current}
                             onChange={(value) => updateOccupationalAccidentCoveredData('current', value)}
+                            placeholder="YYYY"
                           />
                           
                           <YearInput
+                            id="oa-prior-year"
                             label="Prior policy year"
                             value={coveredData.occupationalAccident.prior}
                             onChange={(value) => updateOccupationalAccidentCoveredData('prior', value)}
+                            placeholder="YYYY"
                           />
                           
                           <YearInput
+                            id="oa-third-year"
                             label="3rd policy year"
                             value={coveredData.occupationalAccident.third}
                             onChange={(value) => updateOccupationalAccidentCoveredData('third', value)}
+                            placeholder="YYYY"
                           />
                         </div>
                       </div>
@@ -358,31 +678,23 @@ export default function LossHistoryPage() {
                       {occupationalAccidentClaims === 'yes' && (
                         <div className="pl-4 mb-6">
                           <div className="flex flex-wrap gap-4">
-                            <div className="flex-1 min-w-[230px]">
-                              <label className="block text-base font-semibold text-[#333333] mb-1">
-                                Number of incurred claims
-                              </label>
-                              <input
-                                type="text"
-                                value={claimsData.occupationalAccident.incurred}
-                                onChange={(e) => updateOccupationalAccidentClaimsData('incurred', e.target.value)}
-                                placeholder="0"
-                                className="w-full px-4 py-3 border border-[#D8D8D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]"
-                              />
-                            </div>
+                            <ClaimsInput
+                              id="oa-claims-incurred"
+                              label="Number of incurred claims"
+                              value={claimsData.occupationalAccident.incurred}
+                              onChange={(value) => updateOccupationalAccidentClaimsData('incurred', value)}
+                              placeholder="0"
+                              type="number"
+                            />
                             
-                            <div className="flex-1 min-w-[230px]">
-                              <label className="block text-base font-semibold text-[#333333] mb-1">
-                                Total losses paid
-                              </label>
-                              <input
-                                type="text"
-                                value={claimsData.occupationalAccident.totalLosses}
-                                onChange={(e) => updateOccupationalAccidentClaimsData('totalLosses', e.target.value)}
-                                placeholder="$0.00"
-                                className="w-full px-4 py-3 border border-[#D8D8D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]"
-                              />
-                            </div>
+                            <ClaimsInput
+                              id="oa-claims-losses"
+                              label="Total losses paid"
+                              value={claimsData.occupationalAccident.totalLosses}
+                              onChange={(value) => updateOccupationalAccidentClaimsData('totalLosses', value)}
+                              placeholder="$0.00"
+                              type="currency"
+                            />
                           </div>
                         </div>
                       )}
@@ -394,19 +706,9 @@ export default function LossHistoryPage() {
             
             {/* Non-Trucking Liability Section */}
             <div className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
-              <button 
-                className="flex justify-between items-center p-4 w-full"
-                onClick={() => toggleSection('nonTruckingLiability')}
-              >
+              <button className="flex justify-between items-center p-4 w-full" onClick={() => toggleSection('nonTruckingLiability')}>
                 <h3 className="text-lg font-semibold text-[#333333]">Non-Trucking Liability</h3>
-                <svg 
-                  width="24" 
-                  height="24" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={`transform transition-transform ${openSections.nonTruckingLiability ? 'rotate-180' : ''}`}
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`transform transition-transform ${openSections.nonTruckingLiability ? 'rotate-180' : ''}`}>
                   <path d="M6 9L12 15L18 9" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
@@ -425,12 +727,14 @@ export default function LossHistoryPage() {
                     <div className="mt-4">
                       <div className="flex flex-wrap gap-4 mb-4">
                         <DateInput
+                          id="ntl-loss-run-date"
                           label="Loss run evaluation date"
                           value={dates.nonTruckingLiability.lossRunEvaluation}
                           onChange={(value) => updateNonTruckingLiabilityDate('lossRunEvaluation', value)}
                         />
                         
                         <DateInput
+                          id="ntl-anniversary-date"
                           label="Anniversary date"
                           value={dates.nonTruckingLiability.anniversary}
                           onChange={(value) => updateNonTruckingLiabilityDate('anniversary', value)}
@@ -444,21 +748,27 @@ export default function LossHistoryPage() {
                         
                         <div className="flex flex-wrap gap-4 mb-4">
                           <YearInput
+                            id="ntl-current-year"
                             label="Current policy year"
                             value={coveredData.nonTruckingLiability.current}
                             onChange={(value) => updateNonTruckingLiabilityCoveredData('current', value)}
+                            placeholder="YYYY"
                           />
                           
                           <YearInput
+                            id="ntl-prior-year"
                             label="Prior policy year"
                             value={coveredData.nonTruckingLiability.prior}
                             onChange={(value) => updateNonTruckingLiabilityCoveredData('prior', value)}
+                            placeholder="YYYY"
                           />
                           
                           <YearInput
+                            id="ntl-third-year"
                             label="3rd policy year"
                             value={coveredData.nonTruckingLiability.third}
                             onChange={(value) => updateNonTruckingLiabilityCoveredData('third', value)}
+                            placeholder="YYYY"
                           />
                         </div>
                       </div>
@@ -476,31 +786,23 @@ export default function LossHistoryPage() {
                       {nonTruckingLiabilityClaims === 'yes' && (
                         <div className="pl-4 mb-6">
                           <div className="flex flex-wrap gap-4">
-                            <div className="flex-1 min-w-[230px]">
-                              <label className="block text-base font-semibold text-[#333333] mb-1">
-                                Number of incurred claims
-                              </label>
-                              <input
-                                type="text"
-                                value={claimsData.nonTruckingLiability.incurred}
-                                onChange={(e) => updateNonTruckingLiabilityClaimsData('incurred', e.target.value)}
-                                placeholder="0"
-                                className="w-full px-4 py-3 border border-[#D8D8D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]"
-                              />
-                            </div>
+                            <ClaimsInput
+                              id="ntl-claims-incurred"
+                              label="Number of incurred claims"
+                              value={claimsData.nonTruckingLiability.incurred}
+                              onChange={(value) => updateNonTruckingLiabilityClaimsData('incurred', value)}
+                              placeholder="0"
+                              type="number"
+                            />
                             
-                            <div className="flex-1 min-w-[230px]">
-                              <label className="block text-base font-semibold text-[#333333] mb-1">
-                                Total losses paid
-                              </label>
-                              <input
-                                type="text"
-                                value={claimsData.nonTruckingLiability.totalLosses}
-                                onChange={(e) => updateNonTruckingLiabilityClaimsData('totalLosses', e.target.value)}
-                                placeholder="$0.00"
-                                className="w-full px-4 py-3 border border-[#D8D8D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]"
-                              />
-                            </div>
+                            <ClaimsInput
+                              id="ntl-claims-losses"
+                              label="Total losses paid"
+                              value={claimsData.nonTruckingLiability.totalLosses}
+                              onChange={(value) => updateNonTruckingLiabilityClaimsData('totalLosses', value)}
+                              placeholder="$0.00"
+                              type="currency"
+                            />
                           </div>
                         </div>
                       )}
@@ -512,19 +814,9 @@ export default function LossHistoryPage() {
             
             {/* Vehicle Physical Damage Section */}
             <div className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
-              <button 
-                className="flex justify-between items-center p-4 w-full"
-                onClick={() => toggleSection('vehiclePhysicalDamage')}
-              >
+              <button className="flex justify-between items-center p-4 w-full" onClick={() => toggleSection('vehiclePhysicalDamage')}>
                 <h3 className="text-lg font-semibold text-[#333333]">Vehicle Physical Damage</h3>
-                <svg 
-                  width="24" 
-                  height="24" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={`transform transition-transform ${openSections.vehiclePhysicalDamage ? 'rotate-180' : ''}`}
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`transform transition-transform ${openSections.vehiclePhysicalDamage ? 'rotate-180' : ''}`}>
                   <path d="M6 9L12 15L18 9" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
@@ -543,18 +835,21 @@ export default function LossHistoryPage() {
                     <div className="mt-4">
                       <div className="flex flex-wrap gap-4 mb-4">
                         <DateInput
+                          id="vpd-inception-date"
                           label="Inception date"
                           value={dates.vehiclePhysicalDamage.inception}
                           onChange={(value) => updateVehiclePhysicalDamageDate('inception', value)}
                         />
                         
                         <DateInput
+                          id="vpd-loss-run-date"
                           label="Loss run evaluation date"
                           value={dates.vehiclePhysicalDamage.lossRunEvaluation}
                           onChange={(value) => updateVehiclePhysicalDamageDate('lossRunEvaluation', value)}
                         />
                         
                         <DateInput
+                          id="vpd-anniversary-date"
                           label="Anniversary date"
                           value={dates.vehiclePhysicalDamage.anniversary}
                           onChange={(value) => updateVehiclePhysicalDamageDate('anniversary', value)}
@@ -568,21 +863,27 @@ export default function LossHistoryPage() {
                         
                         <div className="flex flex-wrap gap-4 mb-4">
                           <YearInput
+                            id="vpd-current-year"
                             label="Current policy year"
                             value={coveredData.vehiclePhysicalDamage.current}
                             onChange={(value) => updateVehiclePhysicalDamageCoveredData('current', value)}
+                            placeholder="YYYY"
                           />
                           
                           <YearInput
+                            id="vpd-prior-year"
                             label="Prior policy year"
                             value={coveredData.vehiclePhysicalDamage.prior}
                             onChange={(value) => updateVehiclePhysicalDamageCoveredData('prior', value)}
+                            placeholder="YYYY"
                           />
                           
                           <YearInput
+                            id="vpd-third-year"
                             label="3rd policy year"
                             value={coveredData.vehiclePhysicalDamage.third}
                             onChange={(value) => updateVehiclePhysicalDamageCoveredData('third', value)}
+                            placeholder="YYYY"
                           />
                         </div>
                       </div>
@@ -600,31 +901,23 @@ export default function LossHistoryPage() {
                       {vehiclePhysicalDamageClaims === 'yes' && (
                         <div className="pl-4 mb-6">
                           <div className="flex flex-wrap gap-4">
-                            <div className="flex-1 min-w-[230px]">
-                              <label className="block text-base font-semibold text-[#333333] mb-1">
-                                Number of incurred claims
-                              </label>
-                              <input
-                                type="text"
-                                value={claimsData.vehiclePhysicalDamage.incurred}
-                                onChange={(e) => updateVehiclePhysicalDamageClaimsData('incurred', e.target.value)}
-                                placeholder="0"
-                                className="w-full px-4 py-3 border border-[#D8D8D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]"
-                              />
-                            </div>
+                            <ClaimsInput
+                              id="vpd-claims-incurred"
+                              label="Number of incurred claims"
+                              value={claimsData.vehiclePhysicalDamage.incurred}
+                              onChange={(value) => updateVehiclePhysicalDamageClaimsData('incurred', value)}
+                              placeholder="0"
+                              type="number"
+                            />
                             
-                            <div className="flex-1 min-w-[230px]">
-                              <label className="block text-base font-semibold text-[#333333] mb-1">
-                                Total losses paid
-                              </label>
-                              <input
-                                type="text"
-                                value={claimsData.vehiclePhysicalDamage.totalLosses}
-                                onChange={(e) => updateVehiclePhysicalDamageClaimsData('totalLosses', e.target.value)}
-                                placeholder="$0.00"
-                                className="w-full px-4 py-3 border border-[#D8D8D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]"
-                              />
-                            </div>
+                            <ClaimsInput
+                              id="vpd-claims-losses"
+                              label="Total losses paid"
+                              value={claimsData.vehiclePhysicalDamage.totalLosses}
+                              onChange={(value) => updateVehiclePhysicalDamageClaimsData('totalLosses', value)}
+                              placeholder="$0.00"
+                              type="currency"
+                            />
                           </div>
                         </div>
                       )}
@@ -667,7 +960,7 @@ export default function LossHistoryPage() {
             width="16" 
             height="16" 
             viewBox="0 0 16 16" 
-            fill="none" 
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="currentColor"/>
