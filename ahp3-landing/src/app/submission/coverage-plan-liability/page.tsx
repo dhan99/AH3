@@ -76,7 +76,7 @@ export default function CoveragePlanLiabilityPage() {
   
   // Navigation handlers
   const handlePreviousStep = () => router.push('/submission/coverage-plan-value');
-  const handleNextStep = () => router.push('/submission/proposal');
+  const handleNextStep = () => router.push('/submission/confirm-proposal');
   
   // Progress steps
   const steps = [

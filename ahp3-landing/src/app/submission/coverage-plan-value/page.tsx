@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
 import { Header } from '@/components/dashboard';
 import { Breadcrumb, ProgressStepper } from '@/components/submission';
+import Button from '@/components/ui/Button';
 
 export default function CoveragePlanValuePage() {
   const router = useRouter();
@@ -199,7 +200,7 @@ export default function CoveragePlanValuePage() {
         
         <div className="flex-1 p-8 bg-[#F9F8FB]">
           <h1 className="text-3xl font-bold text-[#333333] mb-6">Coverage Plan and Design</h1>
-          
+
           {/* MC Summary Block */}
           <div className="w-full bg-white rounded-lg border border-[#D8D8D8] shadow-md mb-6">
             <div className="w-full bg-[#F2FBFC] p-4 flex flex-row border-b border-[#D8D8D8] justify-center">
@@ -208,7 +209,7 @@ export default function CoveragePlanValuePage() {
                 <p className="text-sm text-[#007B87]">DBA: Some Trucking Co. Doing Business As Name</p>
               </div>
               <div className="flex flex-col flex-1 items-center">
-                <p className="text-sm text-[#007B87]">450 Rusty Rd<br />Atownin, Alabama 01234</p>
+                <p className="text-sm text-[#007B87] whitespace-pre-line">450 Rusty Rd<br />Atownin, Alabama 01234</p>
               </div>
               <div className="flex flex-col flex-1 items-end">
                 <p className="text-sm text-[#007B87]">USDOT1523020</p>
@@ -738,29 +739,30 @@ export default function CoveragePlanValuePage() {
           
           {/* Navigation Buttons */}
           <div className="bg-[#E6EEEF] py-4 px-6 flex justify-between items-center">
-            <button
+            <Button
+              variant="outline"
               onClick={handlePreviousStep}
-              className="flex items-center gap-2 border-2 border-[#007B87] text-[#007B87] px-4 py-2 rounded font-semibold"
-            >
-              <svg className="transform rotate-180" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12H19" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 5L19 12L12 19" stroke="#007B87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Plan Coverage and Design
-            </button>
-            
-            <div className="flex items-center gap-8">
-              <button
-                onClick={handleNextStep}
-                className="flex items-center gap-2 bg-[#007B87] text-white px-6 py-2 rounded font-semibold"
-              >
-                Summary
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 5L19 12L12 19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              iconLeft={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M14.6808 19C14.3791 19 14.0787 18.8779 13.8593 18.6374L8.49001 12.7486C8.10335 12.3244 8.10335 11.6756 8.49001 11.2514L13.8593 5.36256C14.2728 4.90911 14.9757 4.87656 15.429 5.29C15.8825 5.70356 15.9149 6.40622 15.5016 6.85967L10.8147 12L15.5016 17.1403C15.9149 17.5938 15.8825 18.2964 15.429 18.71C15.216 18.9042 14.9479 19 14.6808 19Z" fill="#007B87"/>
                 </svg>
-              </button>
-            </div>
+              }
+            >
+                Plan Coverage and Design
+            </Button>
+        
+            <Button
+              type="button"
+              onClick={handleNextStep}
+              iconRight={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M9.51922 5C9.82089 5 10.1213 5.12211 10.3407 5.36256L15.71 11.2514C16.0967 11.6756 16.0967 12.3244 15.71 12.7486L10.3407 18.6374C9.92722 19.0909 9.22433 19.1234 8.771 18.71C8.31756 18.2964 8.28511 17.5938 8.69845 17.1403L13.3853 12L8.69845 6.85967C8.28511 6.40622 8.31756 5.70356 8.771 5.29C8.984 5.09578 9.25211 5 9.51922 5Z" fill="white"/>
+                </svg>
+              }
+              className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69] mr-6"
+            >
+                Summary
+            </Button>
           </div>
         </div>
       </div>

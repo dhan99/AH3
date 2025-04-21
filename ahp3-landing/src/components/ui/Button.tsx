@@ -65,7 +65,7 @@ const Button: React.FC<ButtonProps> = ({
     text: `bg-transparent text-[#007B87] ${
       isPressed 
         ? 'scale-95 transform translate-y-0.5 opacity-80' 
-        : 'hover:underline'
+        : 'hover:no-underline'
     }`,
   };
 

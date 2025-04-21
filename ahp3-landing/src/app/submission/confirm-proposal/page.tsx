@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMockAuth } from '@/components/MockAuthProvider';
 import { Header } from '@/components/dashboard';
 import { Breadcrumb, ProgressStepper } from '@/components/submission';
+import Button from '@/components/ui/Button';
 
 export default function ConfirmProposalPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function ConfirmProposalPage() {
   
   // Navigation handlers
   const handlePreviousStep = () => {
-    router.push('/submission/coverage-plan');
+    router.push('/submission/coverage-plan-liability');
   };
 
   // Edit Navigation handlers
@@ -776,7 +777,6 @@ export default function ConfirmProposalPage() {
                 </div>
                 
                 {/* Non-Trucking Liability Coverage */}
-
                 <div className="w-full p-6">
                   <div className="flex justify-between items-center mb-2">
                     <h2 className="text-xl font-semibold text-[#333333]">Non-Trucking Liability Coverage</h2>
@@ -786,9 +786,6 @@ export default function ConfirmProposalPage() {
                       </svg>
                     </button>
                   </div>
-                  
-
-
                   {expandedSections.nonTruckingLiability && (
                     <div className="bg-[#FFFFFF] rounded-lg">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
@@ -802,7 +799,6 @@ export default function ConfirmProposalPage() {
                             <span className="text-sm font-semibold text-[#333333]">{quoteDetails.coverages.nonTruckingLiability.costPerUnit}</span>
                           </div>
                         </div>
-                      
                         <div className="flex flex-col gap-4">
                           <div className="flex flex-col">
                             <span className="text-sm text-[#757575]">Units</span>
@@ -816,7 +812,6 @@ export default function ConfirmProposalPage() {
                           </div>
                         </div>
                       </div>
-
                       <div className="p-4 bg-[#E6EEEF] rounded">
                         <div className="flex justify-center items-center ">
                           <p className="text-base font-semibold text-[#333333] text-justify">{quoteDetails.coverages.nonTruckingLiability.monthlyRate}</p>
@@ -825,10 +820,8 @@ export default function ConfirmProposalPage() {
                           <p className="text-xs text-[#333333]">The total due monthly is subject to change based upon vehicles covered and any applicable state charges.</p>
                         </div>
                       </div>
-
                     </div>
                   )}
-
                 </div>
                 
                 {/* Vehicle Physical Damage */}
@@ -858,7 +851,6 @@ export default function ConfirmProposalPage() {
                             <span className="text-sm font-semibold text-[#333333]">{quoteDetails.coverages.vehiclePhysicalDamage.annualCostPerUnit}</span>
                           </div>
                         </div>
-                      
                         <div className="flex flex-col gap-4">
                           <div className="flex flex-col">
                             <span className="text-sm text-[#757575]">TIV (total insured value)</span>
@@ -880,7 +872,6 @@ export default function ConfirmProposalPage() {
                           </div>
                         </div>
                       </div>
-
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-3 ml-6">
                         <div className="flex flex-col gap-4">
                           <div className="text-sm text-[#757575]">Endorsements</div>
@@ -892,7 +883,6 @@ export default function ConfirmProposalPage() {
                           <div className="text-sm text-[#757575]">Deductible</div>
                         </div>
                       </div>
-
 
                       {quoteDetails.coverages.vehiclePhysicalDamage.endorsements.map((endorsement, idx) => (
                       <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2 ml-6 ">
@@ -985,17 +975,35 @@ export default function ConfirmProposalPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end mt-6">
-                  <button
-                    onClick={() => handleTabChange('proposal')}
-                    className="bg-white border-2 border-[#007B87] text-[#007B87] font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#F2FBFC]"
-                  >
-                    Proposal
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                </div>
+
+                <div className="w-full flex justify-between py-4 px-6 bg-[#FFFFFF] no-underline">
+        <Button
+          variant="outline"
+          onClick={() => handleTabChange('recap')}
+          iconLeft={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M14.6808 19C14.3791 19 14.0787 18.8779 13.8593 18.6374L8.49001 12.7486C8.10335 12.3244 8.10335 11.6756 8.49001 11.2514L13.8593 5.36256C14.2728 4.90911 14.9757 4.87656 15.429 5.29C15.8825 5.70356 15.9149 6.40622 15.5016 6.85967L10.8147 12L15.5016 17.1403C15.9149 17.5938 15.8825 18.2964 15.429 18.71C15.216 18.9042 14.9479 19 14.6808 19Z" fill="#007B87"/>
+            </svg>
+          }
+        >
+          Intake Questionnaire Recap
+        </Button>
+        
+        <Button
+          variant="outline"
+          onClick={() => setActiveTab('proposal')}
+          iconRight={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.51922 5C9.82089 5 10.1213 5.12211 10.3407 5.36256L15.71 11.2514C16.0967 11.6756 16.0967 12.3244 15.71 12.7486L10.3407 18.6374C9.92722 19.0909 9.22433 19.1234 8.771 18.71C8.31756 18.2964 8.28511 17.5938 8.69845 17.1403L13.3853 12L8.69845 6.85967C8.28511 6.40622 8.31756 5.70356 8.771 5.29C8.984 5.09578 9.25211 5 9.51922 5Z" fill="#007B87"/>
+            </svg>
+          }
+        >
+          Proposal
+        </Button>
+      </div>
+
+
+
               </div>
             )}
             
@@ -1101,32 +1109,26 @@ export default function ConfirmProposalPage() {
       </div>
       
       {/* Button Bar - Full width spanning both sidebar and main content */}
-      <div className="w-full flex justify-between py-4 px-6 bg-[#E6EEEF]">
-        <button
-          type="button"
+      <div className="w-full flex justify-between py-4 px-6 bg-[#E6EEEF] no-underline">
+        <Button
+          variant="outline"
           onClick={handlePreviousStep}
-          className="border-2 border-[#007B87] text-[#007B87] font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#F2FBFC]"
+          iconLeft={
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M14.6808 19C14.3791 19 14.0787 18.8779 13.8593 18.6374L8.49001 12.7486C8.10335 12.3244 8.10335 11.6756 8.49001 11.2514L13.8593 5.36256C14.2728 4.90911 14.9757 4.87656 15.429 5.29C15.8825 5.70356 15.9149 6.40622 15.5016 6.85967L10.8147 12L15.5016 17.1403C15.9149 17.5938 15.8825 18.2964 15.429 18.71C15.216 18.9042 14.9479 19 14.6808 19Z" fill="#007B87"/>
+            </svg>
+          }
         >
-          <svg 
-            width="16" 
-            height="16" 
-            viewBox="0 0 16 16" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-            className="rotate-180"
-          >
-            <path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="currentColor"/>
-          </svg>
           Coverage and Plan Design
-        </button>
+        </Button>
         
-        <button
-          type="button"
+        <Button
+          variant="text"
           onClick={() => setActiveTab('proposal')}
-          className="bg-[#007B87] text-white font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69]"
+          className="bg-[#007B87] font-semibold px-6 py-2 rounded flex items-center gap-2 hover:bg-[#005F69] hover:text-white"
         >
           Start New Submission
-        </button>
+        </Button>
       </div>
     </div>
   );
