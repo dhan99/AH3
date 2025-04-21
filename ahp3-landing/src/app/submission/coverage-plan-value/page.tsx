@@ -6,48 +6,52 @@ import { useMockAuth } from '@/components/MockAuthProvider';
 import { Header } from '@/components/dashboard';
 import { Breadcrumb, ProgressStepper } from '@/components/submission';
 import Button from '@/components/ui/Button';
+import useCoveragePlanValueStore from '@/store/useCoveragePlanValueStore';
 
 export default function CoveragePlanValuePage() {
   const router = useRouter();
   const { isLoading, logout, user: authUser } = useMockAuth();
   
-  // State for accordion sections
-  const [openSections, setOpenSections] = useState({
-    unitsByState: true,
-    vehicles: true,
-    ntlCoverageOptions: true,
-    tivForVpd: true,
-    vpdCoverageOptions: true,
-    effectiveDates: true
-  });
+  // Use the Zustand store
+  const {
+    vehicleCounts,
+    setVehicleCount,
+    ntlCombinedSingleLimit,
+    setNtlCombinedSingleLimit,
+    powerUnits,
+    setPowerUnits,
+    trailers,
+    setTrailers,
+    vpdLimit,
+    setVpdLimit,
+    vpdDeductible,
+    setVpdDeductible,
+    effectiveDates,
+    setEffectiveDate,
+    sameEffectiveDateForAll,
+    setSameEffectiveDateForAll,
+    openSections,
+    setOpenSection,
+    validation,
+    validateAll,
+    validateVehicles,
+    validateNtlCoverageOptions,
+    validateTivForVpd,
+    validateVpdCoverageOptions
+  } = useCoveragePlanValueStore();
   
+  // Local state not stored in Zustand
   const [unitsByState, setUnitsByState] = useState([
     { state: 'Rhode Island', units: '2' },
     { state: 'Massachusetts', units: '4' },
     { state: 'Connecticut', units: '6' },
     { state: 'Vermont', units: '2' }
   ]);
-  const [vehicleCounts, setVehicleCounts] = useState({
-    lessThan10000: '',
-    between10000And26000: '',
-    moreThan26000: ''
-  });
   const [showAllStates, setShowAllStates] = useState(false);
   const [stateValues, setStateValues] = useState<Record<string, string>>({});
-  const [ntlCombinedSingleLimit, setNtlCombinedSingleLimit] = useState<string | null>(null);
-  const [vpdLimit, setVpdLimit] = useState<string | null>(null);
-  const [vpdDeductible, setVpdDeductible] = useState<string | null>(null);
-  const [powerUnits, setPowerUnits] = useState({ units: '', tiv: '$0.00' });
-  const [trailers, setTrailers] = useState({ units: '', tiv: '$0.00' });
-  const [sameEffectiveDateForAll, setSameEffectiveDateForAll] = useState(false);
-  const [effectiveDates, setEffectiveDates] = useState({
-    occupationalAccident: 'mm/dd/yyyy',
-    nonTruckingLiability: 'mm/dd/yyyy',
-    vehiclePhysicalDamage: 'mm/dd/yyyy'
-  });
   
   const toggleSection = (section: keyof typeof openSections) => 
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setOpenSection(section, !openSections[section]);
   
   const addUnitState = () => 
     setUnitsByState([...unitsByState, { state: '', units: '' }]);
@@ -126,7 +130,37 @@ export default function CoveragePlanValuePage() {
   };
   
   const handlePreviousStep = () => router.push('/submission/coverage-plan-driver');
-  const handleNextStep = () => router.push('/submission/confirm-proposal');
+  const handleNextStep = () => {
+    // First validate sections explicitly to ensure field errors are populated
+    validateVehicles();
+    validateNtlCoverageOptions();
+    validateTivForVpd();
+    validateVpdCoverageOptions();
+    
+    // Then run all validations
+    const isValid = validateAll();
+    
+    if (isValid) {
+      router.push('/submission/confirm-proposal');
+    } else {
+      // Open the appropriate section based on validation errors
+      if (!validation.vehicles.valid) {
+        setOpenSection('vehicles', true);
+      }
+      
+      if (!validation.ntlCoverageOptions.valid) {
+        setOpenSection('ntlCoverageOptions', true);
+      }
+      
+      if (!validation.tivForVpd.valid) {
+        setOpenSection('tivForVpd', true);
+      }
+      
+      if (!validation.vpdCoverageOptions.valid) {
+        setOpenSection('vpdCoverageOptions', true);
+      }
+    }
+  };
   
   const steps = [
     {
@@ -434,10 +468,33 @@ export default function CoveragePlanValuePage() {
                             </div>
                             <input
                               type="number"
+                              min="0"
                               value={vehicleCounts.lessThan10000}
-                              onChange={(e) => setVehicleCounts({...vehicleCounts, lessThan10000: e.target.value})}
-                              className="w-full p-3 border border-[#D8D8D8] rounded"
+                              onChange={(e) => {
+                                // Only allow non-negative numbers
+                                const value = e.target.value;
+                                if (value === '' || parseInt(value) >= 0) {
+                                  setVehicleCount('lessThan10000', value);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Run validation on blur to check if field is valid
+                                if (vehicleCounts.lessThan10000 !== '') {
+                                  // Field has value, clear error
+                                  validateVehicles();
+                                }
+                              }}
+                              className={`w-full p-3 border rounded ${
+                                validation.vehicles.errors.lessThan10000 
+                                  ? 'border-[#C60C30]' 
+                                  : 'border-[#D8D8D8]'
+                              }`}
                             />
+                            {validation.vehicles.errors.lessThan10000 && (
+                              <p className="text-[#C60C30] text-xs mt-1">
+                                {validation.vehicles.errors.lessThan10000}
+                              </p>
+                            )}
                           </div>
                           
                           <div className="w-full md:w-1/3">
@@ -448,10 +505,32 @@ export default function CoveragePlanValuePage() {
                             </div>
                             <input
                               type="number"
+                              min="0"
                               value={vehicleCounts.between10000And26000}
-                              onChange={(e) => setVehicleCounts({...vehicleCounts, between10000And26000: e.target.value})}
-                              className="w-full p-3 border border-[#D8D8D8] rounded"
+                              onChange={(e) => {
+                                // Only allow non-negative numbers
+                                const value = e.target.value;
+                                if (value === '' || parseInt(value) >= 0) {
+                                  setVehicleCount('between10000And26000', value);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Run validation on blur to check if field is valid
+                                if (vehicleCounts.between10000And26000 !== '') {
+                                  validateVehicles();
+                                }
+                              }}
+                              className={`w-full p-3 border rounded ${
+                                validation.vehicles.errors.between10000And26000 
+                                  ? 'border-[#C60C30]' 
+                                  : 'border-[#D8D8D8]'
+                              }`}
                             />
+                            {validation.vehicles.errors.between10000And26000 && (
+                              <p className="text-[#C60C30] text-xs mt-1">
+                                {validation.vehicles.errors.between10000And26000}
+                              </p>
+                            )}
                           </div>
                           
                           <div className="w-full md:w-1/3">
@@ -462,10 +541,32 @@ export default function CoveragePlanValuePage() {
                             </div>
                             <input
                               type="number"
+                              min="0"
                               value={vehicleCounts.moreThan26000}
-                              onChange={(e) => setVehicleCounts({...vehicleCounts, moreThan26000: e.target.value})}
-                              className="w-full p-3 border border-[#D8D8D8] rounded"
+                              onChange={(e) => {
+                                // Only allow non-negative numbers
+                                const value = e.target.value;
+                                if (value === '' || parseInt(value) >= 0) {
+                                  setVehicleCount('moreThan26000', value);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Run validation on blur to check if field is valid
+                                if (vehicleCounts.moreThan26000 !== '') {
+                                  validateVehicles();
+                                }
+                              }}
+                              className={`w-full p-3 border rounded ${
+                                validation.vehicles.errors.moreThan26000 
+                                  ? 'border-[#C60C30]' 
+                                  : 'border-[#D8D8D8]'
+                              }`}
                             />
+                            {validation.vehicles.errors.moreThan26000 && (
+                              <p className="text-[#C60C30] text-xs mt-1">
+                                {validation.vehicles.errors.moreThan26000}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -477,13 +578,17 @@ export default function CoveragePlanValuePage() {
                       <label className="block text-base font-semibold text-[#333333] mb-4">
                         Combined Single Limit (CSL)
                       </label>
-                      <div className="flex gap-4 mb-4">
+                      <div className={`flex gap-4 mb-4 ${validation.ntlCoverageOptions.errors.combinedSingleLimit ? 'pb-6 relative' : ''}`}>
                         {['$500,000', '$1,000,000'].map(value => (
                           <div 
                             key={value}
                             className={`px-6 py-3 border rounded-sm cursor-pointer 
-                              ${ntlCombinedSingleLimit === value ? 'bg-[#F2FBFC] border-[#007B87]' : 'bg-white border-[#D8D8D8]'}`}
-                            onClick={() => setNtlCombinedSingleLimit(value)}
+                              ${ntlCombinedSingleLimit === value ? 'bg-[#F2FBFC] border-[#007B87]' : 'bg-white border-[#D8D8D8]'}
+                              ${validation.ntlCoverageOptions.errors.combinedSingleLimit ? 'border-[#C60C30]' : ''}`}
+                            onClick={() => {
+                              setNtlCombinedSingleLimit(value);
+                              validateNtlCoverageOptions(); // Validate after selection to clear error
+                            }}
                           >
                             <div className="flex items-center gap-4">
                               <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
@@ -495,6 +600,11 @@ export default function CoveragePlanValuePage() {
                             </div>
                           </div>
                         ))}
+                        {validation.ntlCoverageOptions.errors.combinedSingleLimit && (
+                          <p className="text-[#C60C30] text-xs absolute bottom-0 left-0">
+                            {validation.ntlCoverageOptions.errors.combinedSingleLimit}
+                          </p>
+                        )}
                       </div>
                       <div className="text-base font-semibold text-[#333333]">
                         Includes statutory minimum UM/UIM and PIP
@@ -506,13 +616,17 @@ export default function CoveragePlanValuePage() {
                     <div>
                       <div className="mb-6">
                         <label className="block text-base font-semibold text-[#333333] mb-4">Limits</label>
-                        <div className="flex gap-4 flex-wrap">
+                        <div className={`flex gap-4 flex-wrap ${validation.vpdCoverageOptions.errors.limit ? 'pb-6 relative' : ''}`}>
                           {['$250,000', '$1,500,000', '$5,000,000'].map(value => (
                             <div 
                               key={value}
                               className={`px-6 py-3 border rounded-sm cursor-pointer 
-                                ${vpdLimit === value ? 'bg-[#F2FBFC] border-[#007B87]' : 'bg-white border-[#D8D8D8]'}`}
-                              onClick={() => setVpdLimit(value)}
+                                ${vpdLimit === value ? 'bg-[#F2FBFC] border-[#007B87]' : 'bg-white border-[#D8D8D8]'}
+                                ${validation.vpdCoverageOptions.errors.limit ? 'border-[#C60C30]' : ''}`}
+                              onClick={() => {
+                                setVpdLimit(value);
+                                validateVpdCoverageOptions(); // Validate after selection to clear error
+                              }}
                             >
                               <div className="flex items-center gap-4">
                                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
@@ -524,18 +638,27 @@ export default function CoveragePlanValuePage() {
                               </div>
                             </div>
                           ))}
+                          {validation.vpdCoverageOptions.errors.limit && (
+                            <p className="text-[#C60C30] text-xs absolute bottom-0 left-0">
+                              {validation.vpdCoverageOptions.errors.limit}
+                            </p>
+                          )}
                         </div>
                       </div>
                       
                       <div className="mb-6">
                         <label className="block text-base font-semibold text-[#333333] mb-4">Deductible</label>
-                        <div className="flex gap-4 flex-wrap">
+                        <div className={`flex gap-4 flex-wrap ${validation.vpdCoverageOptions.errors.deductible ? 'pb-6 relative' : ''}`}>
                           {['$1,000', '$2,500', '$5,000'].map(value => (
                             <div 
                               key={value}
                               className={`px-6 py-3 border rounded-sm cursor-pointer 
-                                ${vpdDeductible === value ? 'bg-[#F2FBFC] border-[#007B87]' : 'bg-white border-[#D8D8D8]'}`}
-                              onClick={() => setVpdDeductible(value)}
+                                ${vpdDeductible === value ? 'bg-[#F2FBFC] border-[#007B87]' : 'bg-white border-[#D8D8D8]'}
+                                ${validation.vpdCoverageOptions.errors.deductible ? 'border-[#C60C30]' : ''}`}
+                              onClick={() => {
+                                setVpdDeductible(value);
+                                validateVpdCoverageOptions(); // Validate after selection to clear error
+                              }}
                             >
                               <div className="flex items-center gap-4">
                                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
@@ -547,6 +670,11 @@ export default function CoveragePlanValuePage() {
                               </div>
                             </div>
                           ))}
+                          {validation.vpdCoverageOptions.errors.deductible && (
+                            <p className="text-[#C60C30] text-xs absolute bottom-0 left-0">
+                              {validation.vpdCoverageOptions.errors.deductible}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -571,11 +699,28 @@ export default function CoveragePlanValuePage() {
                             </div>
                             <input
                               type="number"
+                              min="0"
                               value={powerUnits.units}
-                              onChange={(e) => setPowerUnits({...powerUnits, units: e.target.value})}
-                              className="w-full p-3 border border-[#D8D8D8] rounded"
+                              onChange={(e) => {
+                                // Only allow non-negative numbers
+                                const value = e.target.value;
+                                if (value === '' || parseInt(value) >= 0) {
+                                  setPowerUnits('units', value);
+                                }
+                              }}
+                              onBlur={() => validateTivForVpd()}
+                              className={`w-full p-3 border rounded ${
+                                validation.tivForVpd.errors.powerUnitsCount 
+                                  ? 'border-[#C60C30]' 
+                                  : 'border-[#D8D8D8]'
+                              }`}
                               placeholder="0"
                             />
+                            {validation.tivForVpd.errors.powerUnitsCount && (
+                              <p className="text-[#C60C30] text-xs mt-1">
+                                {validation.tivForVpd.errors.powerUnitsCount}
+                              </p>
+                            )}
                           </div>
                           <div className="w-full md:w-1/3">
                             <div className="mb-1">
@@ -590,15 +735,25 @@ export default function CoveragePlanValuePage() {
                                 onChange={(e) => {
                                   // Format as currency if needed
                                   const value = e.target.value.replace(/[^0-9.]/g, '');
-                                  setPowerUnits({...powerUnits, tiv: value ? `$${value}` : '$0.00'});
+                                  setPowerUnits('tiv', value ? `$${value}` : '$0.00');
                                 }}
-                                className="w-full p-3 border border-[#D8D8D8] rounded pl-8"
+                                onBlur={() => validateTivForVpd()}
+                                className={`w-full p-3 border rounded pl-8 ${
+                                  validation.tivForVpd.errors.powerUnitsTiv 
+                                    ? 'border-[#C60C30]' 
+                                    : 'border-[#D8D8D8]'
+                                }`}
                                 placeholder="$0.00"
                               />
                               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#333333]">
                                 {powerUnits.tiv === '$0.00' ? '$' : ''}
                               </span>
                             </div>
+                            {validation.tivForVpd.errors.powerUnitsTiv && (
+                              <p className="text-[#C60C30] text-xs mt-1">
+                                {validation.tivForVpd.errors.powerUnitsTiv}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <p className="text-xs text-[#666666] italic">
@@ -619,11 +774,28 @@ export default function CoveragePlanValuePage() {
                             </div>
                             <input
                               type="number"
+                              min="0"
                               value={trailers.units}
-                              onChange={(e) => setTrailers({...trailers, units: e.target.value})}
-                              className="w-full p-3 border border-[#D8D8D8] rounded"
+                              onChange={(e) => {
+                                // Only allow non-negative numbers
+                                const value = e.target.value;
+                                if (value === '' || parseInt(value) >= 0) {
+                                  setTrailers('units', value);
+                                }
+                              }}
+                              onBlur={() => validateTivForVpd()}
+                              className={`w-full p-3 border rounded ${
+                                validation.tivForVpd.errors.trailersCount 
+                                  ? 'border-[#C60C30]' 
+                                  : 'border-[#D8D8D8]'
+                              }`}
                               placeholder="0"
                             />
+                            {validation.tivForVpd.errors.trailersCount && (
+                              <p className="text-[#C60C30] text-xs mt-1">
+                                {validation.tivForVpd.errors.trailersCount}
+                              </p>
+                            )}
                           </div>
                           <div className="w-full md:w-1/3">
                             <div className="mb-1">
@@ -638,15 +810,25 @@ export default function CoveragePlanValuePage() {
                                 onChange={(e) => {
                                   // Format as currency if needed
                                   const value = e.target.value.replace(/[^0-9.]/g, '');
-                                  setTrailers({...trailers, tiv: value ? `$${value}` : '$0.00'});
+                                  setTrailers('tiv', value ? `$${value}` : '$0.00');
                                 }}
-                                className="w-full p-3 border border-[#D8D8D8] rounded pl-8"
+                                onBlur={() => validateTivForVpd()}
+                                className={`w-full p-3 border rounded pl-8 ${
+                                  validation.tivForVpd.errors.trailersTiv
+                                    ? 'border-[#C60C30]' 
+                                    : 'border-[#D8D8D8]'
+                                }`}
                                 placeholder="$0.00"
                               />
                               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#333333]">
                                 {trailers.tiv === '$0.00' ? '$' : ''}
                               </span>
                             </div>
+                            {validation.tivForVpd.errors.trailersTiv && (
+                              <p className="text-[#C60C30] text-xs mt-1">
+                                {validation.tivForVpd.errors.trailersTiv}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <p className="text-xs text-[#666666] italic">
@@ -699,17 +881,12 @@ export default function CoveragePlanValuePage() {
                                   const newValue = e.target.value || 'mm/dd/yyyy';
                                   if (sameEffectiveDateForAll) {
                                     // Apply the same date to all fields when checkbox is checked
-                                    setEffectiveDates({
-                                      occupationalAccident: newValue,
-                                      nonTruckingLiability: newValue,
-                                      vehiclePhysicalDamage: newValue
-                                    });
+                                    setEffectiveDate('occupationalAccident', newValue);
+                                    setEffectiveDate('nonTruckingLiability', newValue);
+                                    setEffectiveDate('vehiclePhysicalDamage', newValue);
                                   } else {
                                     // Update only the current field when checkbox is unchecked
-                                    setEffectiveDates({
-                                      ...effectiveDates,
-                                      [type]: newValue
-                                    });
+                                    setEffectiveDate(type as keyof typeof effectiveDates, newValue);
                                   }
                                 }}
                                 className="w-full p-3 border border-[#D8D8D8] rounded pr-10"
@@ -744,7 +921,7 @@ export default function CoveragePlanValuePage() {
               onClick={handlePreviousStep}
               iconLeft={
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M14.6808 19C14.3791 19 14.0787 18.8779 13.8593 18.6374L8.49001 12.7486C8.10335 12.3244 8.10335 11.6756 8.49001 11.2514L13.8593 5.36256C14.2728 4.90911 14.9757 4.87656 15.429 5.29C15.8825 5.70356 15.9149 6.40622 15.5016 6.85967L10.8147 12L15.5016 17.1403C15.9149 17.5938 15.8825 18.2964 15.429 18.71C15.216 18.9042 14.9479 19 14.6808 19Z" fill="#007B87"/>
+                  <path fillRule="evenodd" clipRule="evenodd" d="M14.6808 19C14.3791 19 14.0787 18.8779 13.8593 18.6374L8.49001 12.7486C8.10335 12.3244 8.10335 11.6756 8.49001 11.2514L13.8593 5.36256C14.2728 4.90911 14.9757 4.87656 15.429 5.29C15.8825 5.70356 15.9149 6.40622 15.5016 6.85967L10.8147 12L15.5016 17.1403C15.9149 17.5938 15.8825 18.2964 15.429 18.71C15.216 18.9042 14.9479 19 14.6808 19Z" fill="#007B87"/>
                 </svg>
               }
             >

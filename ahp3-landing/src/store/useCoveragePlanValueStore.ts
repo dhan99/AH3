@@ -125,7 +125,7 @@ interface CoveragePlanValueState {
 
 // Initial state
 const initialState = {
-  // Vehicle counts
+  // Vehicle counts - all empty by default
   vehicleCounts: {
     lessThan10000: '',
     between10000And26000: '',
@@ -255,13 +255,19 @@ const useCoveragePlanValueStore = create<CoveragePlanValueState>()(
         const errors: ValidationState['vehicles']['errors'] = {};
         let valid = true;
         
-        // Check if at least one of the vehicle fields has a value
-        if (!state.vehicleCounts.lessThan10000 && 
-            !state.vehicleCounts.between10000And26000 && 
-            !state.vehicleCounts.moreThan26000) {
-          errors.lessThan10000 = 'At least one vehicle count is required';
-          errors.between10000And26000 = 'At least one vehicle count is required';
-          errors.moreThan26000 = 'At least one vehicle count is required';
+        // Check that all three vehicle fields have a value (0 is a legitimate input)
+        if (state.vehicleCounts.lessThan10000 === '') {
+          errors.lessThan10000 = 'This field is required';
+          valid = false;
+        }
+        
+        if (state.vehicleCounts.between10000And26000 === '') {
+          errors.between10000And26000 = 'This field is required';
+          valid = false;
+        }
+        
+        if (state.vehicleCounts.moreThan26000 === '') {
+          errors.moreThan26000 = 'This field is required';
           valid = false;
         }
         
@@ -312,23 +318,23 @@ const useCoveragePlanValueStore = create<CoveragePlanValueState>()(
         let valid = true;
         
         // Check Power Units
-        if (!state.powerUnits.units || state.powerUnits.units === '0') {
+        if (!state.powerUnits.units && state.powerUnits.units !== '0') {
           errors.powerUnitsCount = 'Number of power units is required';
           valid = false;
         }
         
-        if (state.powerUnits.tiv === '$0.00' || !state.powerUnits.tiv) {
+        if (!state.powerUnits.tiv) {
           errors.powerUnitsTiv = 'TIV for power units is required';
           valid = false;
         }
         
         // Check Trailers
-        if (!state.trailers.units || state.trailers.units === '0') {
+        if (!state.trailers.units && state.trailers.units !== '0') {
           errors.trailersCount = 'Number of trailers is required';
           valid = false;
         }
         
-        if (state.trailers.tiv === '$0.00' || !state.trailers.tiv) {
+        if (!state.trailers.tiv) {
           errors.trailersTiv = 'TIV for trailers is required';
           valid = false;
         }
