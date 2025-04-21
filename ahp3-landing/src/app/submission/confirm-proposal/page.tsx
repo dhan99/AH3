@@ -38,7 +38,7 @@ export default function ConfirmProposalPage() {
   
   // Navigation handlers
   const handlePreviousStep = () => {
-    router.push('/submission/coverage-plan-liability');
+    router.push('/submission/coverage-plan-value');
   };
 
   // Edit Navigation handlers

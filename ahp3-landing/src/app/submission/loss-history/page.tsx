@@ -27,6 +27,7 @@ export default function LossHistoryPage() {
     dates,
     coveredData,
     claimsData,
+    validation,
     setOpenSection,
     setOccupationalAccidentInPlace,
     setNonTruckingLiabilityInPlace,
@@ -42,7 +43,11 @@ export default function LossHistoryPage() {
     updateVehiclePhysicalDamageCoveredData,
     updateOccupationalAccidentClaimsData,
     updateNonTruckingLiabilityClaimsData,
-    updateVehiclePhysicalDamageClaimsData
+    updateVehiclePhysicalDamageClaimsData,
+    validateOccupationalAccident,
+    validateNonTruckingLiability,
+    validateVehiclePhysicalDamage,
+    validateAll
   } = useLossHistoryStore();
   
   // Toggle accordion sections
@@ -52,7 +57,66 @@ export default function LossHistoryPage() {
   
   // Navigation handlers
   const handlePreviousStep = () => router.push('/submission/eligibility');
-  const handleNextStep = () => router.push('/submission/coverage-plan-driver');
+  const handleNextStep = () => {
+    // Run validation for all fields first to ensure error messages appear
+    validateOccupationalAccident();
+    validateNonTruckingLiability();
+    validateVehiclePhysicalDamage();
+    
+    // Check for missing values in all three required sections
+    const occupationalAccidentMissing = !occupationalAccidentInPlace;
+    const nonTruckingLiabilityMissing = !nonTruckingLiabilityInPlace;
+    const vehiclePhysicalDamageMissing = !vehiclePhysicalDamageInPlace;
+    
+    // Check validity of "yes" selections if those options were chosen
+    const occupationalAccidentYesInvalid = 
+      occupationalAccidentInPlace === 'yes' && !validation.occupationalAccident.valid;
+    const nonTruckingLiabilityYesInvalid = 
+      nonTruckingLiabilityInPlace === 'yes' && !validation.nonTruckingLiability.valid;
+    const vehiclePhysicalDamageYesInvalid = 
+      vehiclePhysicalDamageInPlace === 'yes' && !validation.vehiclePhysicalDamage.valid;
+    
+    // Determine if we should proceed based on all validations
+    const isValid = !(occupationalAccidentMissing || nonTruckingLiabilityMissing || vehiclePhysicalDamageMissing ||
+                      occupationalAccidentYesInvalid || nonTruckingLiabilityYesInvalid || vehiclePhysicalDamageYesInvalid);
+    
+    // Run validations to ensure errors appear
+    validateOccupationalAccident();
+    validateNonTruckingLiability();
+    validateVehiclePhysicalDamage();
+    
+    if (isValid) {
+      router.push('/submission/coverage-plan-driver');
+    } else {
+      // Open sections with errors and determine which to scroll to first
+      let firstErrorSection: string | null = null;
+      
+      // Check occupational accident section first
+      if (occupationalAccidentMissing || occupationalAccidentYesInvalid) {
+        setOpenSection('occupationalAccident', true);
+        if (!firstErrorSection) firstErrorSection = 'occupationalAccident';
+      }
+      
+      // Check non-trucking liability section
+      if (nonTruckingLiabilityMissing || nonTruckingLiabilityYesInvalid) {
+        setOpenSection('nonTruckingLiability', true);
+        if (!firstErrorSection) firstErrorSection = 'nonTruckingLiability';
+      }
+      
+      // Check vehicle physical damage section
+      if (vehiclePhysicalDamageMissing || vehiclePhysicalDamageYesInvalid) {
+        setOpenSection('vehiclePhysicalDamage', true);
+        if (!firstErrorSection) firstErrorSection = 'vehiclePhysicalDamage';
+      }
+      
+      // Scroll to the first section with errors
+      if (firstErrorSection) {
+        setTimeout(() => {
+          document.getElementById(`${firstErrorSection}-section`)?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  };
   
   // Helper function to parse date strings
   const parseDate = (dateString: string) => {
@@ -199,9 +263,33 @@ export default function LossHistoryPage() {
         setLocalDate(date);
       };
       
-      // Only update parent state on close/blur to prevent focus loss
+      // Validate and update parent state on close/blur
       const handleCalendarClose = () => {
-        onChange(formatDate(localDate));
+        const formattedDate = formatDate(localDate);
+        onChange(formattedDate);
+        
+        // On-the-fly validation to clear errors when valid
+        if (id.includes('oa-')) {
+          if (id.includes('loss-run')) {
+            validateOccupationalAccident();
+          } else if (id.includes('anniversary')) {
+            validateOccupationalAccident();
+          }
+        } else if (id.includes('ntl-')) {
+          if (id.includes('loss-run')) {
+            validateNonTruckingLiability();
+          } else if (id.includes('anniversary')) {
+            validateNonTruckingLiability();
+          }
+        } else if (id.includes('vpd-')) {
+          if (id.includes('inception')) {
+            validateVehiclePhysicalDamage();
+          } else if (id.includes('loss-run')) {
+            validateVehiclePhysicalDamage();
+          } else if (id.includes('anniversary')) {
+            validateVehiclePhysicalDamage();
+          }
+        }
       };
       
       // Sync with parent value when it changes externally
@@ -218,7 +306,7 @@ export default function LossHistoryPage() {
           selected={localDate}
           onChange={handleDateChange}
           onCalendarClose={handleCalendarClose}
-          onBlur={() => onChange(formatDate(localDate))}
+          onBlur={handleCalendarClose}
           dateFormat="MM/dd/yyyy"
           placeholderText="MM/DD/YYYY"
           className={`w-full px-4 py-3 border ${error ? 'border-[#C60C30]' : 'border-[#D8D8D8]'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]`}
@@ -293,9 +381,19 @@ export default function LossHistoryPage() {
         setLocalYear(date);
       };
       
-      // Only update parent state on close/blur to prevent focus loss
+      // Validate and update parent state on close/blur
       const handleCalendarClose = () => {
-        onChange(formatYear(localYear));
+        const formattedYear = formatYear(localYear);
+        onChange(formattedYear);
+        
+        // On-the-fly validation to clear errors when valid
+        if (id.includes('oa-')) {
+          validateOccupationalAccident();
+        } else if (id.includes('ntl-')) {
+          validateNonTruckingLiability();
+        } else if (id.includes('vpd-')) {
+          validateVehiclePhysicalDamage();
+        }
       };
       
       // Sync with parent value when it changes externally
@@ -312,7 +410,7 @@ export default function LossHistoryPage() {
           selected={localYear}
           onChange={handleYearChange}
           onCalendarClose={handleCalendarClose}
-          onBlur={() => onChange(formatYear(localYear))}
+          onBlur={handleCalendarClose}
           showYearPicker
           dateFormat="yyyy"
           yearItemNumber={12}
@@ -348,7 +446,8 @@ export default function LossHistoryPage() {
     onChange, 
     placeholder, 
     className = "w-full px-4 py-3 border border-[#D8D8D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#007B87]",
-    type = "text"
+    type = "text",
+    error
   }: {
     id: string;
     label: string;
@@ -357,6 +456,7 @@ export default function LossHistoryPage() {
     placeholder?: string;
     className?: string;
     type?: "number" | "currency" | "text";
+    error?: string;
   }) => {
     // For numeric fields, use an uncontrolled component approach similar to currency
     if (type === "number") {
@@ -400,9 +500,18 @@ export default function LossHistoryPage() {
           }
         }, []);
         
-        // Update parent state on blur
+        // Update parent state and validate on blur
         const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
           onChange(e.target.value);
+          
+          // On-the-fly validation to clear errors when valid
+          if (id.includes('oa-')) {
+            validateOccupationalAccident();
+          } else if (id.includes('ntl-')) {
+            validateNonTruckingLiability();
+          } else if (id.includes('vpd-')) {
+            validateVehiclePhysicalDamage();
+          }
         };
         
         return (
@@ -425,6 +534,9 @@ export default function LossHistoryPage() {
             {label}
           </label>
           <UncontrolledNumberInput />
+          {error && (
+            <p className="text-[#C60C30] text-sm mt-1">{error}</p>
+          )}
         </div>
       );
     }
@@ -484,23 +596,31 @@ export default function LossHistoryPage() {
         const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
           if (!e.target.value) {
             onChange('$0.00');
-            return;
-          }
-          
-          // Format with commas and always two decimal places
-          let value = e.target.value;
-          
-          // Ensure there's a decimal point with exactly two places
-          if (!value.includes('.')) {
-            value += '.00';
           } else {
-            const parts = value.split('.');
-            // Pad with zeros if needed
-            value = parts[0] + '.' + (parts[1] + '00').substring(0, 2);
+            // Format with commas and always two decimal places
+            let value = e.target.value;
+            
+            // Ensure there's a decimal point with exactly two places
+            if (!value.includes('.')) {
+              value += '.00';
+            } else {
+              const parts = value.split('.');
+              // Pad with zeros if needed
+              value = parts[0] + '.' + (parts[1] + '00').substring(0, 2);
+            }
+            
+            // Add dollar sign for storage
+            onChange('$' + value);
           }
           
-          // Add dollar sign for storage
-          onChange('$' + value);
+          // On-the-fly validation to clear errors when valid
+          if (id.includes('oa-')) {
+            validateOccupationalAccident();
+          } else if (id.includes('ntl-')) {
+            validateNonTruckingLiability();
+          } else if (id.includes('vpd-')) {
+            validateVehiclePhysicalDamage();
+          }
         };
         
         return (
@@ -526,6 +646,9 @@ export default function LossHistoryPage() {
             {label}
           </label>
           <UncontrolledCurrencyInput />
+          {error && (
+            <p className="text-[#C60C30] text-sm mt-1">{error}</p>
+          )}
         </div>
       );
     }
@@ -600,7 +723,7 @@ export default function LossHistoryPage() {
             </button>
             
             {/* Occupational Accident Section */}
-            <div className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
+            <div id="occupationalAccident-section" className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
               <button className="flex justify-between items-center p-4 w-full" onClick={() => toggleSection('occupationalAccident')}>
                 <h3 className="text-lg font-semibold text-[#333333]">Occupational Accident</h3>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`transform transition-transform ${openSections.occupationalAccident ? 'rotate-180' : ''}`}>
@@ -610,13 +733,17 @@ export default function LossHistoryPage() {
               
               {openSections.occupationalAccident && (
                 <div className="p-6">
-                  <RadioGroup
-                    name="occupationalAccident_inPlace"
-                    value={occupationalAccidentInPlace}
-                    onChange={setOccupationalAccidentInPlace}
-                    label="Is Occupational Accident coverage currently in place?"
-                    error=""
-                  />
+      <RadioGroup
+        name="occupationalAccident_inPlace"
+        value={occupationalAccidentInPlace}
+        onChange={(value) => {
+          setOccupationalAccidentInPlace(value);
+          // Validate after selection to clear errors
+          setTimeout(() => validateOccupationalAccident(), 0);
+        }}
+        label="Is Occupational Accident coverage currently in place?"
+        error={validation.occupationalAccident.errors.inPlace}
+      />
                   
                   {occupationalAccidentInPlace === 'yes' && (
                     <div className="mt-4">
@@ -626,6 +753,7 @@ export default function LossHistoryPage() {
                           label="Loss run evaluation date"
                           value={dates.occupationalAccident.lossRunEvaluation}
                           onChange={(value) => updateOccupationalAccidentDate('lossRunEvaluation', value)}
+                          error={validation.occupationalAccident.errors.lossRunEvaluation}
                         />
                         
                         <DateInput
@@ -633,6 +761,7 @@ export default function LossHistoryPage() {
                           label="Anniversary date"
                           value={dates.occupationalAccident.anniversary}
                           onChange={(value) => updateOccupationalAccidentDate('anniversary', value)}
+                          error={validation.occupationalAccident.errors.anniversary}
                         />
                       </div>
                       
@@ -648,6 +777,7 @@ export default function LossHistoryPage() {
                             value={coveredData.occupationalAccident.current}
                             onChange={(value) => updateOccupationalAccidentCoveredData('current', value)}
                             placeholder="YYYY"
+                            error={validation.occupationalAccident.errors.current}
                           />
                           
                           <YearInput
@@ -656,6 +786,7 @@ export default function LossHistoryPage() {
                             value={coveredData.occupationalAccident.prior}
                             onChange={(value) => updateOccupationalAccidentCoveredData('prior', value)}
                             placeholder="YYYY"
+                            error={validation.occupationalAccident.errors.prior}
                           />
                           
                           <YearInput
@@ -664,6 +795,7 @@ export default function LossHistoryPage() {
                             value={coveredData.occupationalAccident.third}
                             onChange={(value) => updateOccupationalAccidentCoveredData('third', value)}
                             placeholder="YYYY"
+                            error={validation.occupationalAccident.errors.third}
                           />
                         </div>
                       </div>
@@ -674,7 +806,7 @@ export default function LossHistoryPage() {
                           value={occupationalAccidentClaims}
                           onChange={setOccupationalAccidentClaims}
                           label="Have there been any claims?"
-                          error=""
+                          error={validation.occupationalAccident.errors.claims}
                         />
                       </div>
                       
@@ -688,6 +820,7 @@ export default function LossHistoryPage() {
                               onChange={(value) => updateOccupationalAccidentClaimsData('incurred', value)}
                               placeholder="0"
                               type="number"
+                              error={validation.occupationalAccident.errors.incurred}
                             />
                             
                             <ClaimsInput
@@ -697,6 +830,7 @@ export default function LossHistoryPage() {
                               onChange={(value) => updateOccupationalAccidentClaimsData('totalLosses', value)}
                               placeholder="$0.00"
                               type="currency"
+                              error={validation.occupationalAccident.errors.totalLosses}
                             />
                           </div>
                         </div>
@@ -708,7 +842,7 @@ export default function LossHistoryPage() {
             </div>
             
             {/* Non-Trucking Liability Section */}
-            <div className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
+            <div id="nonTruckingLiability-section" className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
               <button className="flex justify-between items-center p-4 w-full" onClick={() => toggleSection('nonTruckingLiability')}>
                 <h3 className="text-lg font-semibold text-[#333333]">Non-Trucking Liability</h3>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`transform transition-transform ${openSections.nonTruckingLiability ? 'rotate-180' : ''}`}>
@@ -718,13 +852,17 @@ export default function LossHistoryPage() {
               
               {openSections.nonTruckingLiability && (
                 <div className="p-6">
-                  <RadioGroup
-                    name="nonTruckingLiability_inPlace"
-                    value={nonTruckingLiabilityInPlace}
-                    onChange={setNonTruckingLiabilityInPlace}
-                    label="Is Non-Trucking Liability coverage currently in place?"
-                    error=""
-                  />
+      <RadioGroup
+        name="nonTruckingLiability_inPlace"
+        value={nonTruckingLiabilityInPlace}
+        onChange={(value) => {
+          setNonTruckingLiabilityInPlace(value);
+          // Validate after selection to clear errors
+          setTimeout(() => validateNonTruckingLiability(), 0);
+        }}
+        label="Is Non-Trucking Liability coverage currently in place?"
+        error={validation.nonTruckingLiability.errors.inPlace}
+      />
                   
                   {nonTruckingLiabilityInPlace === 'yes' && (
                     <div className="mt-4">
@@ -734,6 +872,7 @@ export default function LossHistoryPage() {
                           label="Loss run evaluation date"
                           value={dates.nonTruckingLiability.lossRunEvaluation}
                           onChange={(value) => updateNonTruckingLiabilityDate('lossRunEvaluation', value)}
+                          error={validation.nonTruckingLiability.errors.lossRunEvaluation}
                         />
                         
                         <DateInput
@@ -741,6 +880,7 @@ export default function LossHistoryPage() {
                           label="Anniversary date"
                           value={dates.nonTruckingLiability.anniversary}
                           onChange={(value) => updateNonTruckingLiabilityDate('anniversary', value)}
+                          error={validation.nonTruckingLiability.errors.anniversary}
                         />
                       </div>
                       
@@ -756,6 +896,7 @@ export default function LossHistoryPage() {
                             value={coveredData.nonTruckingLiability.current}
                             onChange={(value) => updateNonTruckingLiabilityCoveredData('current', value)}
                             placeholder="YYYY"
+                            error={validation.nonTruckingLiability.errors.current}
                           />
                           
                           <YearInput
@@ -764,6 +905,7 @@ export default function LossHistoryPage() {
                             value={coveredData.nonTruckingLiability.prior}
                             onChange={(value) => updateNonTruckingLiabilityCoveredData('prior', value)}
                             placeholder="YYYY"
+                            error={validation.nonTruckingLiability.errors.prior}
                           />
                           
                           <YearInput
@@ -772,6 +914,7 @@ export default function LossHistoryPage() {
                             value={coveredData.nonTruckingLiability.third}
                             onChange={(value) => updateNonTruckingLiabilityCoveredData('third', value)}
                             placeholder="YYYY"
+                            error={validation.nonTruckingLiability.errors.third}
                           />
                         </div>
                       </div>
@@ -782,7 +925,7 @@ export default function LossHistoryPage() {
                           value={nonTruckingLiabilityClaims}
                           onChange={setNonTruckingLiabilityClaims}
                           label="Have there been any claims?"
-                          error=""
+                          error={validation.nonTruckingLiability.errors.claims}
                         />
                       </div>
                       
@@ -796,6 +939,7 @@ export default function LossHistoryPage() {
                               onChange={(value) => updateNonTruckingLiabilityClaimsData('incurred', value)}
                               placeholder="0"
                               type="number"
+                              error={validation.nonTruckingLiability.errors.incurred}
                             />
                             
                             <ClaimsInput
@@ -805,6 +949,7 @@ export default function LossHistoryPage() {
                               onChange={(value) => updateNonTruckingLiabilityClaimsData('totalLosses', value)}
                               placeholder="$0.00"
                               type="currency"
+                              error={validation.nonTruckingLiability.errors.totalLosses}
                             />
                           </div>
                         </div>
@@ -816,7 +961,7 @@ export default function LossHistoryPage() {
             </div>
             
             {/* Vehicle Physical Damage Section */}
-            <div className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
+            <div id="vehiclePhysicalDamage-section" className="border border-[#D8D8D8] mb-6 bg-[#FFFFFF]">
               <button className="flex justify-between items-center p-4 w-full" onClick={() => toggleSection('vehiclePhysicalDamage')}>
                 <h3 className="text-lg font-semibold text-[#333333]">Vehicle Physical Damage</h3>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`transform transition-transform ${openSections.vehiclePhysicalDamage ? 'rotate-180' : ''}`}>
@@ -826,13 +971,17 @@ export default function LossHistoryPage() {
               
               {openSections.vehiclePhysicalDamage && (
                 <div className="p-6">
-                  <RadioGroup
-                    name="vehiclePhysicalDamage_inPlace"
-                    value={vehiclePhysicalDamageInPlace}
-                    onChange={setVehiclePhysicalDamageInPlace}
-                    label="Is current Vehicle Physical Damage coverage in place?"
-                    error=""
-                  />
+      <RadioGroup
+        name="vehiclePhysicalDamage_inPlace"
+        value={vehiclePhysicalDamageInPlace}
+        onChange={(value) => {
+          setVehiclePhysicalDamageInPlace(value);
+          // Validate after selection to clear errors
+          setTimeout(() => validateVehiclePhysicalDamage(), 0);
+        }}
+        label="Is current Vehicle Physical Damage coverage in place?"
+        error={validation.vehiclePhysicalDamage.errors.inPlace}
+      />
                   
                   {vehiclePhysicalDamageInPlace === 'yes' && (
                     <div className="mt-4">
@@ -842,6 +991,7 @@ export default function LossHistoryPage() {
                           label="Inception date"
                           value={dates.vehiclePhysicalDamage.inception}
                           onChange={(value) => updateVehiclePhysicalDamageDate('inception', value)}
+                          error={validation.vehiclePhysicalDamage.errors.inception}
                         />
                         
                         <DateInput
@@ -849,6 +999,7 @@ export default function LossHistoryPage() {
                           label="Loss run evaluation date"
                           value={dates.vehiclePhysicalDamage.lossRunEvaluation}
                           onChange={(value) => updateVehiclePhysicalDamageDate('lossRunEvaluation', value)}
+                          error={validation.vehiclePhysicalDamage.errors.lossRunEvaluation}
                         />
                         
                         <DateInput
@@ -856,6 +1007,7 @@ export default function LossHistoryPage() {
                           label="Anniversary date"
                           value={dates.vehiclePhysicalDamage.anniversary}
                           onChange={(value) => updateVehiclePhysicalDamageDate('anniversary', value)}
+                          error={validation.vehiclePhysicalDamage.errors.anniversary}
                         />
                       </div>
                       
@@ -871,6 +1023,7 @@ export default function LossHistoryPage() {
                             value={coveredData.vehiclePhysicalDamage.current}
                             onChange={(value) => updateVehiclePhysicalDamageCoveredData('current', value)}
                             placeholder="YYYY"
+                            error={validation.vehiclePhysicalDamage.errors.current}
                           />
                           
                           <YearInput
@@ -879,6 +1032,7 @@ export default function LossHistoryPage() {
                             value={coveredData.vehiclePhysicalDamage.prior}
                             onChange={(value) => updateVehiclePhysicalDamageCoveredData('prior', value)}
                             placeholder="YYYY"
+                            error={validation.vehiclePhysicalDamage.errors.prior}
                           />
                           
                           <YearInput
@@ -887,6 +1041,7 @@ export default function LossHistoryPage() {
                             value={coveredData.vehiclePhysicalDamage.third}
                             onChange={(value) => updateVehiclePhysicalDamageCoveredData('third', value)}
                             placeholder="YYYY"
+                            error={validation.vehiclePhysicalDamage.errors.third}
                           />
                         </div>
                       </div>
@@ -897,7 +1052,7 @@ export default function LossHistoryPage() {
                           value={vehiclePhysicalDamageClaims}
                           onChange={setVehiclePhysicalDamageClaims}
                           label="Have there been any claims?"
-                          error=""
+                          error={validation.vehiclePhysicalDamage.errors.claims}
                         />
                       </div>
                       
@@ -911,6 +1066,7 @@ export default function LossHistoryPage() {
                               onChange={(value) => updateVehiclePhysicalDamageClaimsData('incurred', value)}
                               placeholder="0"
                               type="number"
+                              error={validation.vehiclePhysicalDamage.errors.incurred}
                             />
                             
                             <ClaimsInput
@@ -920,6 +1076,7 @@ export default function LossHistoryPage() {
                               onChange={(value) => updateVehiclePhysicalDamageClaimsData('totalLosses', value)}
                               placeholder="$0.00"
                               type="currency"
+                              error={validation.vehiclePhysicalDamage.errors.totalLosses}
                             />
                           </div>
                         </div>

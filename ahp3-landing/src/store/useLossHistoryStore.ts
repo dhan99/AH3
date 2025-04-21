@@ -347,16 +347,20 @@ const useLossHistoryStore = create<LossHistoryState>()(
             valid = false;
           }
           
-          // Validate prior policy year if provided
-          if (state.coveredData.occupationalAccident.prior && 
-              !/^\d{4}$/.test(state.coveredData.occupationalAccident.prior)) {
+          // Validate prior policy year (required)
+          if (!state.coveredData.occupationalAccident.prior) {
+            errors.prior = "Prior policy year is required";
+            valid = false;
+          } else if (!/^\d{4}$/.test(state.coveredData.occupationalAccident.prior)) {
             errors.prior = "Please enter a valid year in YYYY format";
             valid = false;
           }
           
-          // Validate 3rd policy year if provided
-          if (state.coveredData.occupationalAccident.third && 
-              !/^\d{4}$/.test(state.coveredData.occupationalAccident.third)) {
+          // Validate 3rd policy year (required)
+          if (!state.coveredData.occupationalAccident.third) {
+            errors.third = "3rd policy year is required";
+            valid = false;
+          } else if (!/^\d{4}$/.test(state.coveredData.occupationalAccident.third)) {
             errors.third = "Please enter a valid year in YYYY format";
             valid = false;
           }
@@ -410,7 +414,73 @@ const useLossHistoryStore = create<LossHistoryState>()(
           valid = false;
         }
         
-        // For this section, we'll keep validation simple (can be expanded later)
+        // If "Yes" is selected for inPlace
+        if (state.nonTruckingLiabilityInPlace === 'yes') {
+          // Validate date fields
+          if (!state.dates.nonTruckingLiability.lossRunEvaluation) {
+            errors.lossRunEvaluation = "Loss run evaluation date is required";
+            valid = false;
+          }
+          
+          if (!state.dates.nonTruckingLiability.anniversary) {
+            errors.anniversary = "Anniversary date is required";
+            valid = false;
+          }
+          
+          // Validate current policy year (required)
+          if (!state.coveredData.nonTruckingLiability.current) {
+            errors.current = "Current policy year is required";
+            valid = false;
+          } else if (!/^\d{4}$/.test(state.coveredData.nonTruckingLiability.current)) {
+            errors.current = "Please enter a valid year in YYYY format";
+            valid = false;
+          }
+          
+          // Validate prior policy year (required)
+          if (!state.coveredData.nonTruckingLiability.prior) {
+            errors.prior = "Prior policy year is required";
+            valid = false;
+          } else if (!/^\d{4}$/.test(state.coveredData.nonTruckingLiability.prior)) {
+            errors.prior = "Please enter a valid year in YYYY format";
+            valid = false;
+          }
+          
+          // Validate 3rd policy year (required)
+          if (!state.coveredData.nonTruckingLiability.third) {
+            errors.third = "3rd policy year is required";
+            valid = false;
+          } else if (!/^\d{4}$/.test(state.coveredData.nonTruckingLiability.third)) {
+            errors.third = "Please enter a valid year in YYYY format";
+            valid = false;
+          }
+          
+          // Validate 'claims' radio selection
+          if (!state.nonTruckingLiabilityClaims) {
+            errors.claims = "Please select whether there have been any claims";
+            valid = false;
+          }
+          
+          // If "Yes" is selected for claims
+          if (state.nonTruckingLiabilityClaims === 'yes') {
+            // Validate incurred claims (must be a number)
+            if (!state.claimsData.nonTruckingLiability.incurred) {
+              errors.incurred = "Number of incurred claims is required";
+              valid = false;
+            } else if (!/^\d+$/.test(state.claimsData.nonTruckingLiability.incurred)) {
+              errors.incurred = "Please enter a valid number";
+              valid = false;
+            }
+            
+            // Validate total losses (must be a currency amount)
+            if (!state.claimsData.nonTruckingLiability.totalLosses) {
+              errors.totalLosses = "Total losses paid is required";
+              valid = false;
+            } else if (!/^\$?[\d,]+(\.\d{0,2})?$/.test(state.claimsData.nonTruckingLiability.totalLosses)) {
+              errors.totalLosses = "Please enter a valid currency amount";
+              valid = false;
+            }
+          }
+        }
         
         return {
           validation: {
@@ -433,7 +503,78 @@ const useLossHistoryStore = create<LossHistoryState>()(
           valid = false;
         }
         
-        // For this section, we'll keep validation simple (can be expanded later)
+        // If "Yes" is selected for inPlace
+        if (state.vehiclePhysicalDamageInPlace === 'yes') {
+          // Validate date fields
+          if (!state.dates.vehiclePhysicalDamage.inception) {
+            errors.inception = "Inception date is required";
+            valid = false;
+          }
+          
+          if (!state.dates.vehiclePhysicalDamage.lossRunEvaluation) {
+            errors.lossRunEvaluation = "Loss run evaluation date is required";
+            valid = false;
+          }
+          
+          if (!state.dates.vehiclePhysicalDamage.anniversary) {
+            errors.anniversary = "Anniversary date is required";
+            valid = false;
+          }
+          
+          // Validate current policy year (required)
+          if (!state.coveredData.vehiclePhysicalDamage.current) {
+            errors.current = "Current policy year is required";
+            valid = false;
+          } else if (!/^\d{4}$/.test(state.coveredData.vehiclePhysicalDamage.current)) {
+            errors.current = "Please enter a valid year in YYYY format";
+            valid = false;
+          }
+          
+          // Validate prior policy year (required)
+          if (!state.coveredData.vehiclePhysicalDamage.prior) {
+            errors.prior = "Prior policy year is required";
+            valid = false;
+          } else if (!/^\d{4}$/.test(state.coveredData.vehiclePhysicalDamage.prior)) {
+            errors.prior = "Please enter a valid year in YYYY format";
+            valid = false;
+          }
+          
+          // Validate 3rd policy year (required)
+          if (!state.coveredData.vehiclePhysicalDamage.third) {
+            errors.third = "3rd policy year is required";
+            valid = false;
+          } else if (!/^\d{4}$/.test(state.coveredData.vehiclePhysicalDamage.third)) {
+            errors.third = "Please enter a valid year in YYYY format";
+            valid = false;
+          }
+          
+          // Validate 'claims' radio selection
+          if (!state.vehiclePhysicalDamageClaims) {
+            errors.claims = "Please select whether there have been any claims";
+            valid = false;
+          }
+          
+          // If "Yes" is selected for claims
+          if (state.vehiclePhysicalDamageClaims === 'yes') {
+            // Validate incurred claims (must be a number)
+            if (!state.claimsData.vehiclePhysicalDamage.incurred) {
+              errors.incurred = "Number of incurred claims is required";
+              valid = false;
+            } else if (!/^\d+$/.test(state.claimsData.vehiclePhysicalDamage.incurred)) {
+              errors.incurred = "Please enter a valid number";
+              valid = false;
+            }
+            
+            // Validate total losses (must be a currency amount)
+            if (!state.claimsData.vehiclePhysicalDamage.totalLosses) {
+              errors.totalLosses = "Total losses paid is required";
+              valid = false;
+            } else if (!/^\$?[\d,]+(\.\d{0,2})?$/.test(state.claimsData.vehiclePhysicalDamage.totalLosses)) {
+              errors.totalLosses = "Please enter a valid currency amount";
+              valid = false;
+            }
+          }
+        }
         
         return {
           validation: {
@@ -447,51 +588,13 @@ const useLossHistoryStore = create<LossHistoryState>()(
       }),
       
       validateAll: (): boolean => {
-        // Use a different approach to avoid circular reference
-        // First validate all sections
-        set((state) => {
-          // Internal validation logic - duplicated but avoids circular reference
-          const occupationalAccidentErrors: Record<string, string> = {};
-          let occupationalAccidentValid = true;
-          
-          if (!state.occupationalAccidentInPlace) {
-            occupationalAccidentErrors.inPlace = "Please select whether Occupational Accident coverage is currently in place";
-            occupationalAccidentValid = false;
-          }
-          
-          const nonTruckingLiabilityErrors: Record<string, string> = {};
-          let nonTruckingLiabilityValid = true;
-          
-          if (!state.nonTruckingLiabilityInPlace) {
-            nonTruckingLiabilityErrors.inPlace = "Please select whether Non-Trucking Liability coverage is currently in place";
-            nonTruckingLiabilityValid = false;
-          }
-          
-          const vehiclePhysicalDamageErrors: Record<string, string> = {};
-          let vehiclePhysicalDamageValid = true;
-          
-          if (!state.vehiclePhysicalDamageInPlace) {
-            vehiclePhysicalDamageErrors.inPlace = "Please select whether Vehicle Physical Damage coverage is currently in place";
-            vehiclePhysicalDamageValid = false;
-          }
-          
-          return {
-            validation: {
-              occupationalAccident: {
-                valid: occupationalAccidentValid,
-                errors: occupationalAccidentErrors
-              },
-              nonTruckingLiability: {
-                valid: nonTruckingLiabilityValid,
-                errors: nonTruckingLiabilityErrors
-              },
-              vehiclePhysicalDamage: {
-                valid: vehiclePhysicalDamageValid,
-                errors: vehiclePhysicalDamageErrors
-              }
-            }
-          };
-        });
+        // Run each section's validation
+        const { validateOccupationalAccident, validateNonTruckingLiability, validateVehiclePhysicalDamage } = get();
+        
+        // Run all validations
+        validateOccupationalAccident();
+        validateNonTruckingLiability();
+        validateVehiclePhysicalDamage();
         
         // Get state after validation to check results
         const currentState = get();

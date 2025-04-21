@@ -87,9 +87,10 @@ export default function CoveragePlanDriverPage() {
   
   // Handle removing a state for owner operators
   const removeOwnerOperatorState = (index: number) => {
-    setOwnerOperatorStates(
-      ownerOperatorStates.filter((_, i) => i !== index)
-    );
+    const updatedStates = ownerOperatorStates.filter((_, i) => i !== index);
+    setOwnerOperatorStates(updatedStates);
+    // Update the total count after removing
+    setOwnerOperatorCount(calculateOwnerOperatorTotal(updatedStates));
   };
   
   // Handle adding a new state for contract drivers
@@ -102,11 +103,27 @@ export default function CoveragePlanDriverPage() {
   
   // Handle removing a state for contract drivers
   const removeContractDriverState = (index: number) => {
-    setContractDriverStates(
-      contractDriverStates.filter((_, i) => i !== index)
-    );
+    const updatedStates = contractDriverStates.filter((_, i) => i !== index);
+    setContractDriverStates(updatedStates);
+    // Update the total count after removing
+    setContractDriverCount(calculateContractDriverTotal(updatedStates));
   };
   
+  // Calculate totals
+  const calculateOwnerOperatorTotal = (states: typeof ownerOperatorStates) => {
+    return states.reduce((sum, state) => {
+      const drivers = parseInt(state.drivers) || 0;
+      return sum + drivers;
+    }, 0).toString();
+  };
+
+  const calculateContractDriverTotal = (states: typeof contractDriverStates) => {
+    return states.reduce((sum, state) => {
+      const drivers = parseInt(state.drivers) || 0;
+      return sum + drivers;
+    }, 0).toString();
+  };
+
   // Handle updating owner operator state information
   const updateOwnerOperatorState = (index: number, field: 'state' | 'drivers', value: string) => {
     const updatedStates = [...ownerOperatorStates];
@@ -115,6 +132,11 @@ export default function CoveragePlanDriverPage() {
       [field]: value
     };
     setOwnerOperatorStates(updatedStates);
+    
+    // Update the total count automatically
+    if (field === 'drivers') {
+      setOwnerOperatorCount(calculateOwnerOperatorTotal(updatedStates));
+    }
   };
   
   // Handle updating contract driver state information
@@ -125,6 +147,11 @@ export default function CoveragePlanDriverPage() {
       [field]: value
     };
     setContractDriverStates(updatedStates);
+    
+    // Update the total count automatically
+    if (field === 'drivers') {
+      setContractDriverCount(calculateContractDriverTotal(updatedStates));
+    }
   };
   
   // Handle coverage option changes
@@ -275,8 +302,8 @@ export default function CoveragePlanDriverPage() {
                     <input
                       type="number"
                       value={ownerOperatorCount}
-                      onChange={(e) => setOwnerOperatorCount(e.target.value)}
-                      className="w-64 p-3 border border-[#D8D8D8] rounded"
+                      readOnly
+                      className="w-64 p-3 border border-[#D8D8D8] rounded bg-gray-100"
                     />
                   </div>
                   
@@ -362,8 +389,8 @@ export default function CoveragePlanDriverPage() {
                     <input
                       type="number"
                       value={contractDriverCount}
-                      onChange={(e) => setContractDriverCount(e.target.value)}
-                      className="w-64 p-3 border border-[#D8D8D8] rounded"
+                      readOnly
+                      className="w-64 p-3 border border-[#D8D8D8] rounded bg-gray-100"
                     />
                   </div>
                   
@@ -674,8 +701,12 @@ export default function CoveragePlanDriverPage() {
                     
                     if (currentDriverType === 'ownerOperator') {
                       setOwnerOperatorStates(updatedStates);
+                      // Update the total count
+                      setOwnerOperatorCount(calculateOwnerOperatorTotal(updatedStates));
                     } else {
                       setContractDriverStates(updatedStates);
+                      // Update the total count
+                      setContractDriverCount(calculateContractDriverTotal(updatedStates));
                     }
                     setShowAllStatesModal(false);
                   }}
