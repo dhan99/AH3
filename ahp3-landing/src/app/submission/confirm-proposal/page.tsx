@@ -60,9 +60,19 @@ export default function ConfirmProposalPage() {
   };
   
   const handleCreateProposal = () => {
-    // In a real app, this would send the proposal to the backend
-    // and then navigate to a success page or dashboard
-    router.push('/dashboard/submissions');
+    // Show notification that email has been sent
+    setNotification({
+      isVisible: true,
+      message: "Email is sent to contact email address requesting to Motor Carrier to accept the proposal",
+      type: 'success'
+    });
+    
+    // Add delay before redirecting to allow notification to be seen
+    setTimeout(() => {
+      // In a real app, this would send the proposal to the backend
+      // and then navigate to a success page or dashboard
+      router.push('/dashboard/submissions');
+    }, 2000);
   };
   
   // Tab change handler
