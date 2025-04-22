@@ -664,6 +664,7 @@ export default function EligibilityPage() {
                       <input
                         type="text"
                         value={vehicleTypes.otherType}
+                        placeholder="Enter the vehicle type"
                         onChange={(e) => handleVehicleTypeChange('otherType', e.target.value)}
                         onBlur={validateVehicleTypes}
                         className={`border rounded p-2 ${

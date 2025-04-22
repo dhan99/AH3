@@ -61,9 +61,9 @@ const initialState = {
     flatbeds: '20',
     intermodalContainer: '20',
     refrigerated: '20',
-    tankers: '10',
-    other: '10',
-    otherType: 'Truck type'
+    tankers: '20',
+    other: '',
+    otherType: ''
   },
   
   // Hauling
